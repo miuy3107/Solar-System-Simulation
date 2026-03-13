@@ -1,0 +1,62 @@
+@startuml
+
+title Solar System Simulation - Objects and Physical Rules
+
+class Simulation {
+- bodies : List<Body>
+- dt : float
++ add_body(body)
++ step()
++ run()
+}
+
+class Body {
+- name : str
+- mass : float
+- position : Vector2D
+- velocity : Vector2D
+- radius : float
++ update(dt)
+}
+
+class Planet {
+}
+
+class Meteor {
+- target_planet : Planet
++ set_target(planet)
+}
+
+class PhysicsEngine {
++ compute_gravity(b1, b2)
++ apply_motion(body, force, dt)
+}
+
+class Integrator {
++ euler_step(body, force, dt)
+}
+
+class CollisionDetector {
++ check_collision(b1, b2)
+}
+
+class Vector2D {
+- x : float
+- y : float
+}
+
+Body <|-- Planet
+Body <|-- Meteor
+
+Simulation "1" o-- "*" Body
+Simulation --> PhysicsEngine
+Simulation --> Integrator
+Simulation --> CollisionDetector
+
+PhysicsEngine --> Body
+Integrator --> Body
+CollisionDetector --> Body
+
+Body --> Vector2D
+
+@enduml
