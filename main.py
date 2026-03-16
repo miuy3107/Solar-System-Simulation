@@ -38,9 +38,10 @@ Saturn  = Planet("Saturn",9.58*AU,0,0,9.7*KM,0,mass=5.683e26)
 Uranus  = Planet("Uranus",19.22*AU,0,0,6.8*KM,0,mass=8.681e25)
 Neptune = Planet("Neptune",30.05*AU,0,0,5.4*KM,0,mass=1.024e26)
 Pluto   = Planet("Pluto",39.48*AU,0,0,4.7*KM,0,mass=1.309e22)
+Meteor1 = Meteor("Meteor1", 45*AU,5*AU,-12000,-8000, mass = 1e12)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
-bodies = [Sun] + planets
+bodies = [Sun] + planets + [Meteor1] 
 
 t = 0
 dt = 3600 * 24 
