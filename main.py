@@ -1,11 +1,18 @@
 from vpython import *
+<<<<<<< HEAD
 import random 
 
+=======
+>>>>>>> 2093dbf4b0cacac91ce13adfec566d866e5a8b37
 AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       #( gravitational constant ) 
 class Body:
+<<<<<<< HEAD
     def __init__(self, name, x, y, z, vx, vy, vz, ax = 0, ay = 0, az = 0, mass = 1):
+=======
+    def __init__(self, name, x, y, z, vx, vy, vz, ax = 0, ay = 0, mass = 1):
+>>>>>>> 2093dbf4b0cacac91ce13adfec566d866e5a8b37
         self.name = name 
         #position [m]
         self.x = x
@@ -42,6 +49,28 @@ Pluto   = Planet("Pluto",39.48*AU,0,0,4.7*KM,0,mass=1.309e22)
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
 
+<<<<<<< HEAD
+=======
+sun = sphere(pos=vector(0,0,0), radius=AU/10, color=color.yellow)
+mercury = sphere(pos=vector(0.39*AU, 0, 0), radius=AU/40, color=color.gray(0.5), make_trail=True)
+mercury.v = vector(0, 47.4*KM, 0)
+venus = sphere(pos=vector(0.72*AU, 0, 0), radius=AU/40, color=color.orange, make_trail=True)
+venus.v = vector(0, 35.0*KM, 0)
+earth = sphere(pos=vector(1.00*AU, 0, 0), radius=AU/40, color=color.blue, make_trail=True)
+earth.v = vector(0, 29.8*KM, 0)
+mars = sphere(pos=vector(1.52*AU, 0, 0), radius=AU/40, color=color.red, make_trail=True) #light streak when object move 
+mars.v = vector(0, 24.1*KM, 0)
+jupiter = sphere(pos=vector(5.20*AU, 0, 0), radius=AU/25, color=color.cyan, make_trail=True)
+jupiter.v = vector(0, 13.1*KM, 0)
+saturn = sphere(pos=vector(9.58*AU, 0, 0), radius=AU/30, color=color.white, make_trail=True)
+saturn.v = vector(0, 9.7*KM, 0)
+uranus = sphere(pos=vector(19.22*AU, 0, 0), radius=AU/35, color=color.green, make_trail=True)
+uranus.v = vector(0, 6.8*KM, 0)
+neptune = sphere(pos=vector(30.05*AU, 0, 0), radius=AU/35, color=color.blue, make_trail=True)
+neptune.v = vector(0, 5.4*KM, 0)
+pluto = sphere(pos=vector(39.48*AU, 0, 0), radius=AU/50, color=color.gray(0.7), make_trail=True)
+pluto.v = vector(0, 4.7*KM, 0)
+>>>>>>> 2093dbf4b0cacac91ce13adfec566d866e5a8b37
 t = 0
 dt = 3600 * 24 
 while t < 365 * 24 * 3600 * 250: # Run for 250 Earth years to see Pluto move
