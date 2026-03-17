@@ -2,6 +2,7 @@ from vpython import *
 import random 
 
 # ========================================= BACKGROUND ==========================================================
+
 scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
 NUM_STARS = 200
@@ -82,7 +83,6 @@ bodies = [Sun] + planets + [Meteor1]
 
 # ========================================= INTERACTIVE FEATURE ==========================================================
 
-# Dictionary containing information for the pop-ups
 # Dictionary chứa thông tin các hành tinh đã được cập nhật
 planet_facts = {
     "Sun": "Sun\nType: Star\nTemperature: 5778 K\nFun fact: Contains 99.86% of the Solar System's mass",
@@ -99,7 +99,7 @@ planet_facts = {
 }
 
 # Create the hidden 2D pop-up board
-info_board = label(visible=False, xoffset=160, yoffset=50, space=30, height=25, border=4, font='sans')
+info_board = label(visible=False, xoffset=60, yoffset=50, space=30, height=25, border=4, font='sans')
 
 def on_mouse_click(evt):
     click_pos = evt.pos 
@@ -116,12 +116,17 @@ def on_mouse_click(evt):
             min_diff = diff
             closest_body = b
             
-    if min_diff < 1.5: 
+    # Đã thu hẹp phạm vi click (0.3) và thêm chức năng Bật/Tắt
+    if min_diff < 0.3: 
         if closest_body.name in planet_facts:
-            info_board.text = planet_facts[closest_body.name]
-            info_board.visible = True  # Bật bảng lên (nó sẽ ở nguyên góc trái màn hình)
+            new_text = planet_facts[closest_body.name]
+            if info_board.visible and info_board.text == new_text:
+                info_board.visible = False
+            else:
+                info_board.text = new_text
+                info_board.visible = True  
     else:
-        info_board.visible = False     # Tắt bảng khi bấm ra ngoài
+        info_board.visible = False     
 
 scene.bind('mousedown', on_mouse_click)
 
@@ -135,11 +140,10 @@ while t < 365 * 24 * 3600 * 250: # Run for 250 Earth years to see Pluto move
     
     # Physics calculations for planetary movement
     for p in planets:
-        r_vec = p.position - Sun.position                             # Distance vector from the Sun to the Planet
-        p.acceleration = -G * Sun.mass * norm(r_vec) / mag(r_vec)**2  # Acceleration: a = -G * M_sun * r_hat / r^2
-        p.velocity = p.velocity + p.acceleration * dt                 # Updated velocity: v2 = v1 + a * dt
-        p.position = p.position + p.velocity * dt                     # Updated position
-        p.update_visual()                                             # Update 3D visual position
+        r_vec = p.position - Sun.position                                 # Distance vector from the Sun to the Planet
+        p.acceleration = -G * Sun.mass * norm(r_vec) / mag(r_vec)**2      # Acceleration: a = -G * M_sun * r_hat / r^2
+        p.velocity = p.velocity + p.acceleration * dt                     # Updated velocity: v2 = v1 + a * dt
+        p.position = p.position + p.velocity * dt                         # Updated position
+        p.update_visual()                                                 # Update 3D visual position
         
-    t = t + dt                                                        # Update time 
-  
+    t = t + dt                                                            # Update time
