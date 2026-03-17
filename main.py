@@ -1,12 +1,31 @@
 from vpython import *
 import random 
 
+
+# ========================================= BACKGROUND ==========================================================
+
 scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
+NUM_STARS = 200
+
+for _ in range(NUM_STARS):
+    x = random.uniform(-50, 50)
+    y = random.uniform(-50, 50)
+    z = random.uniform(-50, 50)
+
+    sphere(
+        pos=vector(x, y, z),
+        radius=random.uniform(0.001, 0.1),
+        color=color.white,
+        emissive=True  # self-glowed 
+    )
+
+# ========================================= SOLAR SYSTEM ==========================================================
 AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       # (gravitational constant) 
 SCALE = 1/AU        
+
 class Body:
     def __init__(self, name, position = [0,0,0], velocity = [0,0,0], acceleration = [0,0,0], mass = 1, radius = 0.05, color = color.white):
         self.name = name 
@@ -48,6 +67,9 @@ def hex_to_rgb(hex_color):
     )
 
 Sun = Body("Sun",[0, 0, 0], [0, 0, 0], mass = 1.989e30,radius=0.2,color=color.yellow) 
+Sun.visual.emissive = True
+local_light(pos=Sun.position * SCALE, color=color.white)
+
 # the unit of position is in [AU] so it needs to be multiplied by AU to be [m], similarly with velocity 
 # the position vector need to be perpendicular to the velocity vector ==> the planet won't fly away from the Solar system 
 # position at x while velocity at y 
@@ -76,4 +98,10 @@ while t < 365 * 24 * 3600 * 250: # Run for 250 Earth years to see Pluto move
         p.velocity = p.velocity + p.acceleration * dt                              # Updatd velocity: v2 = v1 + a * dt
         p.position = p.position + p.velocity * dt                          # Updated position
         p.update_visual()
-    t = t + dt
+    t = t + dt           # Updated time 
+
+
+
+
+
+    # ========================================= METEOR FEATURE ==========================================================
