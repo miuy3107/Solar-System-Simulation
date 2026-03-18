@@ -76,14 +76,12 @@ Saturn  = Planet("Saturn", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.
 Uranus  = Planet("Uranus", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, color=hex_to_rgb("#9BE4EE"))
 Neptune = Planet("Neptune", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, color=hex_to_rgb("#5573E7"))
 Pluto   = Planet("Pluto", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, color=hex_to_rgb("#C3C4BB"))
-Meteor1 = Meteor("Meteor1", [1.5*AU, 0.3*AU, 0], [-15000, -5000, 0], [0,0,0], 1e12, radius=0.03, color=color.white)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
-bodies = [Sun] + planets + [Meteor1] 
+bodies = [Sun] + planets
 
 # ========================================= INTERACTIVE FEATURE ==========================================================
 
-# Dictionary chứa thông tin các hành tinh đã được cập nhật
 planet_facts = {
     "Sun": "Sun\nType: Star\nTemperature: 5778 K\nFun fact: Contains 99.86% of the Solar System's mass",
     "Mercury": "Mercury\nType: Terrestrial\nMoons: 0\nFun fact: A day is longer than a year (176 vs 88 Earth days)",
@@ -116,7 +114,6 @@ def on_mouse_click(evt):
             min_diff = diff
             closest_body = b
             
-    # Đã thu hẹp phạm vi click (0.3) và thêm chức năng Bật/Tắt
     if min_diff < 0.3: 
         if closest_body.name in planet_facts:
             new_text = planet_facts[closest_body.name]
