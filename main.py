@@ -51,7 +51,28 @@ class Planet(Body):
     pass 
 
 class Meteor(Body): 
-    pass 
+    pass
+
+class BlackHole(Body):
+    def __init__(self, name, position, mass):
+        super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0.25, color=color.black)
+        
+        # Make it look cooler
+        self.visual.emissive = False
+        
+        # Add a glowing ring (accretion disk vibe)
+        self.disk = ring(
+            pos=self.position * SCALE,
+            axis=vector(0,1,0),
+            radius=0.4,
+            thickness=0.05,
+            color=color.orange,
+            opacity=0.6
+        )
+
+    def update_visual(self):
+        super().update_visual()
+        self.disk.pos = self.visual.pos
 
 # Convert hex color to RGB vector to easily customize colors
 def hex_to_rgb(hex_color):
@@ -127,18 +148,60 @@ def on_mouse_click(evt):
 
 scene.bind('mousedown', on_mouse_click)
 
+
+# ========================================= BLACK HOLE ==========================================================
+
+black_hole = None
+is_black_hole = False
+
+def toggle_black_hole(b):
+    global Sun, black_hole, is_black_hole, bodies
+    
+    if not is_black_hole:
+        # Hide Sun
+        Sun.visual.visible = False
+        
+        # Create Black Hole
+        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*1000)
+        
+        # Replace in bodies list
+        bodies[0] = black_hole
+        
+        is_black_hole = True
+        
+    else:
+        # Remove Black Hole
+        black_hole.visual.visible = False
+        black_hole.disk.visible = False
+        
+        # Bring Sun back
+        Sun.visual.visible = True
+        
+        bodies[0] = Sun
+        
+        is_black_hole = False
+    
+def key_input(evt):
+    if evt.key.lower() == 'b':
+        toggle_black_hole(None)
+
+scene.bind('keydown', key_input)
+
+
 # ========================================= MAIN LOOP ==========================================================
 
 t = 0
 dt = 3600 * 24 
 
 while t < 365 * 24 * 3600 * 250: # Run for 250 Earth years to see Pluto move
-    rate(50) 
+    rate(100) 
     
     # Physics calculations for planetary movement
+    center = bodies[0]
+
     for p in planets:
-        r_vec = p.position - Sun.position                                 # Distance vector from the Sun to the Planet
-        p.acceleration = -G * Sun.mass * norm(r_vec) / mag(r_vec)**2      # Acceleration: a = -G * M_sun * r_hat / r^2
+        r_vec = p.position - center.position
+        p.acceleration = -G * center.mass * norm(r_vec) / mag(r_vec)**2
         p.velocity = p.velocity + p.acceleration * dt                     # Updated velocity: v2 = v1 + a * dt
         p.position = p.position + p.velocity * dt                         # Updated position
         p.update_visual()                                                 # Update 3D visual position
