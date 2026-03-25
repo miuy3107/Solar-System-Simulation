@@ -63,7 +63,7 @@ class BlackHole(Body):
     def __init__(self, name, position, mass):
 
         super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
-        self.radius = (2*G*Sun.mass)/C**2  #schwarzchild radius 
+        self.radius = (2*G*self.mass)/C**2  #schwarzchild radius 
         
         # Make it look cooler
         self.visual.emissive = False
