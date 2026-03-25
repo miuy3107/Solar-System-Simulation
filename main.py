@@ -29,10 +29,12 @@ C = 3e8            # m/s
 class Body:
     def __init__(self, name, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05, color=color.white):
         self.name = name 
+
         if isinstance(position, vector):     #check input
             self.position = position
         else:
             self.position = vector(*position)
+
         self.velocity = vector(*velocity)         # velocity [m/s]
         self.acceleration = vector(*acceleration) # acceleration [m/s^2]
         self.mass = mass                          # mass [kg] 
@@ -59,6 +61,7 @@ class Meteor(Body):
 
 class BlackHole(Body):
     def __init__(self, name, position, mass):
+
         super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
         self.radius = (2*G*Sun.mass)/C**2  #schwarzchild radius 
         
@@ -217,10 +220,12 @@ while t < 365 * 24 * 3600 * 250:
     for p in bodies:
         p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
 
+
     
     new_acc_list = []
     for p in bodies:
         new_acc_list.append(compute_acceleration(p, bodies, G))
+
 
     
     for i, p in enumerate(bodies):
@@ -229,6 +234,7 @@ while t < 365 * 24 * 3600 * 250:
     
     for i, p in enumerate(bodies):
         p.acceleration = new_acc_list[i]
+
 
     
     for p in bodies:
