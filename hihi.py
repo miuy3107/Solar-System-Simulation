@@ -24,15 +24,11 @@ AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       # gravitational constant
 SCALE = 1/AU       
-C = 3e8            # m/s    
 
 class Body:
     def __init__(self, name, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05, color=color.white):
         self.name = name 
-        if isinstance(position, vector):     #check input
-            self.position = position
-        else:
-            self.position = vector(*position)
+        self.position = vector(*position)         # position [m]
         self.velocity = vector(*velocity)         # velocity [m/s]
         self.acceleration = vector(*acceleration) # acceleration [m/s^2]
         self.mass = mass                          # mass [kg] 
@@ -55,15 +51,7 @@ class Planet(Body):
     pass 
 
 class Meteor(Body): 
-    pass
-
-class BlackHole(Body):
-    def __init__(self, name, position, mass):
-        super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
-        self.radius = (2*G*Sun.mass)/C**2  #schwarzchild radius 
-        
-        # Make it look cooler
-        self.visual.emissive = False
+    pass 
 
 # Convert hex color to RGB vector to easily customize colors
 def hex_to_rgb(hex_color):
@@ -138,50 +126,6 @@ def on_mouse_click(evt):
         info_board.visible = False     
 
 scene.bind('mousedown', on_mouse_click)
-
-
-# ========================================= BLACK HOLE ==========================================================
-
-black_hole = None
-is_black_hole = False
-
-def toggle_black_hole(b):
-    global Sun, black_hole, is_black_hole, bodies
-
-    if not is_black_hole:
-        # Hide Sun
-        Sun.visual.visible = False
-
-        # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10)
-
-        # Replace Sun in bodies list
-        bodies[0] = black_hole
-
-        is_black_hole = True
-
-    else:
-        # Remove Black Hole
-        if black_hole:
-            black_hole.visual.visible = False
-
-        # Bring Sun back
-        Sun.visual.visible = True
-
-        # light 
-        local_light(pos=Sun.position * SCALE, color=color.white)
-
-        # Replace back
-        bodies[0] = Sun
-
-        is_black_hole = False
-    
-def key_input(evt):
-    if evt.key.lower() == 'b':
-        toggle_black_hole(None)
-
-scene.bind('keydown', key_input)
-
 
 # ========================================= MAIN LOOP ==========================================================
 
