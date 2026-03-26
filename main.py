@@ -201,13 +201,13 @@ def compute_acceleration(p, bodies, G):
         if dist < 1e-5:
             continue
 
-        total_acc += -G * other.mass * r_vec / dist**3
+        total_acc += -G * other.mass * r_vec / dist**3   #newton gravitational law 
 
     return total_acc
 
 
 t = 0
-dt = 3600 * 24 
+dt = 3600
 
 while t < 365 * 24 * 3600 * 250:
     rate(50)
