@@ -161,12 +161,11 @@ def toggle_black_hole(b):
         # Hide Sun
         Sun.visual.visible = False
         
-        # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass)
+        # Create Black Hole (with x1000 mass as updated from Github)
+        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass * 1000)
         
         # Replace in bodies list
         bodies[0] = black_hole
-        
         is_black_hole = True
         
     else:
@@ -178,31 +177,21 @@ def toggle_black_hole(b):
         Sun.visual.visible = True
         
         bodies[0] = Sun
-        
         is_black_hole = False
-scene.append_to_caption('\n')
+        
+    scene.append_to_caption('\n')
 
 button(text="Toggle Black Hole", bind=toggle_black_hole)
+    
+def key_input(evt):
+    if evt.key.lower() == 'b':
+        toggle_black_hole(None)
+
+scene.bind('keydown', key_input)
+
 
 # ========================================= MAIN LOOP ==========================================================
 
-t = 0
-dt = 3600 * 24 
-
-while t < 365 * 24 * 3600 * 250: # Run for 250 Earth years to see Pluto move
-    rate(50) 
-    
-    # Physics calculations for planetary movement
-    center = bodies[0]
-
-    for p in planets:
-        r_vec = p.position - center.position
-        p.acceleration = -G * center.mass * norm(r_vec) / mag(r_vec)**2
-        p.velocity = p.velocity + p.acceleration * dt                     # Updated velocity: v2 = v1 + a * dt
-        p.position = p.position + p.velocity * dt                         # Updated position
-        p.update_visual()                                                 # Update 3D visual position
-        
-    t = t + dt                                                            # Update time
 def compute_acceleration(p, bodies, G):
     total_acc = vector(0, 0, 0)
 
@@ -217,7 +206,6 @@ def compute_acceleration(p, bodies, G):
             continue
 
         total_acc += -G * other.mass * r_vec / dist**3
-        
 
     return total_acc
 
@@ -227,28 +215,22 @@ dt = 3600 * 24
 
 while t < 365 * 24 * 3600 * 250:
     rate(50)
-
     
     for p in bodies:
         p.acceleration = compute_acceleration(p, bodies, G)
-
     
     for p in bodies:
         p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
-
     
     new_acc_list = []
     for p in bodies:
         new_acc_list.append(compute_acceleration(p, bodies, G))
-
     
     for i, p in enumerate(bodies):
         p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
-
     
     for i, p in enumerate(bodies):
         p.acceleration = new_acc_list[i]
-
     
     for p in bodies:
         p.update_visual()
