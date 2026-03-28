@@ -1,4 +1,5 @@
 from vpython import *
+from abc import ABC, abstractmethod
 import random 
 
 # ========================================= BACKGROUND ==========================================================
@@ -24,10 +25,12 @@ AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       # gravitational constant
 SCALE = 1/AU       
-C = 3e8            # m/s    
+C = 3e8            # m/s 
+VISUAL_SCALE = 10
 
-class Body:
-    def __init__(self, name, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05, color=color.white):
+
+class Body(ABC):
+    def __init__(self, name, texture, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05):
         self.name = name 
 
         if isinstance(position, vector):     #check input
@@ -39,32 +42,39 @@ class Body:
         self.acceleration = vector(*acceleration) # acceleration [m/s^2]
         self.mass = mass                          # mass [kg] 
         self.radius = radius                      # radius [km]
-        self.color = color                        # color
+        self.texture = texture                  # texture
         
         # 3D visual object
         self.visual = sphere(
             pos=self.position * SCALE,
             radius=radius,
-            color=color,
+            texture=self.texture,
             make_trail=True,
         )
-
+    
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
+    
 
-class Planet(Body):
-    pass 
-
-class Meteor(Body): 
+class Star(Body):
     pass
 
-class BlackHole(Body):
-    def __init__(self, name, position, mass):
+class Planet(Body):
+    def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
+        scaled_radius = radius * 10
+        super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
 
-        super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
+class Meteor(Body): 
+    pass 
+
+class BlackHole(Body):
+    def __init__(self, name, position, mass, color):
+
+        super().__init__(name, None, position, [0,0,0], [0,0,0], mass=mass, radius=0)
         self.radius = (2*G*self.mass)/C**2  #schwarzchild radius 
-        
+        self.color = color
+
         # Make it look cooler
         self.visual.emissive = False
 
@@ -77,20 +87,20 @@ def hex_to_rgb(hex_color):
         int(hex_color[4:6],16)/255        # Blue
     )
 
-Sun = Body("Sun", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2, color=color.yellow) 
+Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
 Sun.visual.emissive = True
 local_light(pos=Sun.position * SCALE, color=color.white)
 
 # NOTE: The missing [0, 0, 0] acceleration vector was added to the planets and meteor below to prevent the previous crash!
-Mercury = Planet("Mercury", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, color=hex_to_rgb("#B3CCDB"))
-Venus   = Planet("Venus", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, color=hex_to_rgb("#F77E40"))
-Earth   = Planet("Earth", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, color=hex_to_rgb("#5789E0"))
-Mars    = Planet("Mars", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097, color=hex_to_rgb("#D2574B"))
-Jupiter = Planet("Jupiter", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, color=hex_to_rgb("#B88D7F"))
-Saturn  = Planet("Saturn", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, color=hex_to_rgb("#875B4A"))
-Uranus  = Planet("Uranus", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, color=hex_to_rgb("#9BE4EE"))
-Neptune = Planet("Neptune", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, color=hex_to_rgb("#5573E7"))
-Pluto   = Planet("Pluto", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, color=hex_to_rgb("#C3C4BB"))
+Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007)
+Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174)
+Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183)
+Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097)
+Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010)
+Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674)
+Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729)
+Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708)
+Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
@@ -156,7 +166,7 @@ def toggle_black_hole(b):
         Sun.visual.visible = False
 
         # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10)
+        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10, color.black)
 
         # Replace Sun in bodies list
         bodies[0] = black_hole
