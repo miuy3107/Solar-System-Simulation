@@ -28,7 +28,7 @@ SCALE = 1/AU
 C = 3e8            # m/s    
 
 class Body(ABC):
-    def __init__(self, name, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05, color=color.white):
+    def __init__(self, name, texture, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05):
         self.name = name 
 
         # Check input for position
@@ -51,7 +51,8 @@ class Body(ABC):
 
         self.mass = mass                          
         self.radius = radius                      
-        self.color = color                        
+        self.texture = texture            
+
         
         # 3D visual object
         self.visual = sphere(
@@ -64,28 +65,20 @@ class Body(ABC):
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
+
     
-
-    @abstractmethod
-    def body_type(self):
-        pass
-
 class Star(Body):
-    def body_type(self):
-        return "Star"
-
+    pass
     
 class Meteor(Body): 
-    def body_type(self):
-        return "Meteor"
+    pass 
 
 
 class Planet(Body):
     def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
         scaled_radius = radius * 10
         super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
-        def body_type(self):
-            return "Planet"
+
 
 class BlackHole(Body):
 
