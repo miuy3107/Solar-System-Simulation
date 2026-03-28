@@ -1,6 +1,6 @@
 from vpython import *
-from abc import ABC, abstractmethod
 import random 
+from abc import ABC, abstractmethod
 
 # ========================================= BACKGROUND ==========================================================
 
@@ -57,14 +57,13 @@ class Body(ABC):
         self.visual = sphere(
             pos=self.position * SCALE,
             radius=radius,
-            texture=self.texture,
+            color=color,
             make_trail=True,
         )
-    
+
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
-    
 
     @abstractmethod
     def body_type(self):
@@ -74,30 +73,22 @@ class Star(Body):
     def body_type(self):
         return "Star"
 
-    
+class Planet(Body):
+    def body_type(self):
+        return "Planet"
+
 class Meteor(Body): 
     def body_type(self):
         return "Meteor"
 
-
-class Planet(Body):
-    def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
-        scaled_radius = radius * 10
-        super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
-        def body_type(self):
-            return "Planet"
-
 class BlackHole(Body):
-
-    def __init__(self, name, position, mass, color):
-
-        super().__init__(name, None, position, [0,0,0], [0,0,0], mass=mass, radius=0)
-        self.radius = (2*G*self.mass)/C**2  #schwarzchild radius 
-        self.color = color
-
-        # Make it look cooler
+    def __init__(self, name, position, mass):
+        super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
+        self.radius = (2*G*self.mass)/C**2  # schwarzchild radius 
         self.visual.emissive = False
 
+    def body_type(self):
+        return "Black Hole"
 
 # Convert hex color to RGB vector to easily customize colors
 def hex_to_rgb(hex_color):
@@ -108,21 +99,20 @@ def hex_to_rgb(hex_color):
         int(hex_color[4:6],16)/255        # Blue
     )
 
-
-Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
+# Instantiate the objects
+Sun = Star("Sun", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2, color=color.yellow) 
 Sun.visual.emissive = True
 local_light(pos=Sun.position * SCALE, color=color.white)
 
-# NOTE: The missing [0, 0, 0] acceleration vector was added to the planets and meteor below to prevent the previous crash!
-Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007)
-Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174)
-Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183)
-Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097)
-Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010)
-Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674)
-Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729)
-Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708)
-Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034)
+Mercury = Planet("Mercury", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, color=hex_to_rgb("#B3CCDB"))
+Venus   = Planet("Venus", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, color=hex_to_rgb("#F77E40"))
+Earth   = Planet("Earth", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, color=hex_to_rgb("#5789E0"))
+Mars    = Planet("Mars", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097, color=hex_to_rgb("#D2574B"))
+Jupiter = Planet("Jupiter", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, color=hex_to_rgb("#B88D7F"))
+Saturn  = Planet("Saturn", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, color=hex_to_rgb("#875B4A"))
+Uranus  = Planet("Uranus", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, color=hex_to_rgb("#9BE4EE"))
+Neptune = Planet("Neptune", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, color=hex_to_rgb("#5573E7"))
+Pluto   = Planet("Pluto", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, color=hex_to_rgb("#C3C4BB"))
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
@@ -151,6 +141,7 @@ def on_mouse_click(evt):
     closest_body = None
     min_diff = float('inf')
     
+    # FIXED: Actually calculate distance between mouse click and the planet's visual position
     for b in bodies:
         diff = mag(click_pos - b.visual.pos) 
         
@@ -186,29 +177,15 @@ def toggle_black_hole(b):
 
     if not is_black_hole:
         Sun.visual.visible = False
-
-        # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10, color.black)
-
-        # Replace Sun in bodies list
+        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10)
         bodies[0] = black_hole
-
         is_black_hole = True
-
     else:
-        # Remove Black Hole
         if black_hole:
             black_hole.visual.visible = False
-
-        # Bring Sun back
         Sun.visual.visible = True
-
-        # light 
         local_light(pos=Sun.position * SCALE, color=color.white)
-
-        # Replace back
         bodies[0] = Sun
-
         is_black_hole = False
 
 def spawn_meteor(target):
@@ -220,8 +197,9 @@ def spawn_meteor(target):
     
     # Calculate a velocity aimed right at the target
     direction = (target.position - spawn_pos).norm()
-    speed = 80 * KM 
+    speed = 80 * KM # 80 km/s, a very fast meteor
     
+    # By adding the target's current velocity, the meteor leads its shot 
     vel = (direction * speed) + target.velocity 
     
     new_meteor = Meteor(
@@ -229,13 +207,13 @@ def spawn_meteor(target):
         position=spawn_pos,
         velocity=vel,
         acceleration=[0,0,0],
-        mass=1e15,    
-        radius=0.005,   
-        color=color.red 
+        mass=1e15,      # Much lighter than a planet
+        radius=0.005,   # Big enough to see
+        color=color.red # Red to look like a fiery threat
     )
     
     pending_bodies.append(new_meteor)
-    print(f"Meteor spawned targeting {target.name}!") 
+    print(f"Meteor spawned targeting {target.name}!") # Helpful debug print in the console
     
 def key_input(evt):
     if evt.key.lower() == 'b':
@@ -265,6 +243,7 @@ def compute_acceleration(p, bodies, G):
 t = 0
 dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
+# FIXED: Replaced year limit with an infinite loop so the simulation doesn't just stop
 while True:
     rate(50)
     
