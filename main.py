@@ -66,7 +66,8 @@ class Body(ABC):
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
-
+            
+    @abstractmethod 
     def body_type(self):
         pass 
     
@@ -99,17 +100,6 @@ class BlackHole(Body):
     def body_type(self):
         return "BlackHole"
 
-
-# Convert hex color to RGB vector to easily customize colors
-"""def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip('#')
-    return vector(
-        int(hex_color[0:2],16)/255,       # Red
-        int(hex_color[2:4],16)/255,       # Green
-        int(hex_color[4:6],16)/255        # Blue
-    )"""
-
-
 Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
 Sun.visual.emissive = True
 local_light(pos=Sun.position * SCALE, color=color.white)
@@ -128,7 +118,7 @@ Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
 
-# ========================================= INTERACTIVE FEATURE ==========================================================
+# ========================================= FUN FACT ==========================================================
 
 planet_facts = {
     "Sun": "Temperature: 5778 K\nFun fact: Contains 99.86% of the Solar System's mass",
