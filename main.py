@@ -2,16 +2,16 @@ from vpython import *
 from abc import ABC, abstractmethod
 import random 
 
-# ========================================= BACKGROUND ==========================================================
+# ============================================= BACKGROUND ==========================================================
 
 scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
-NUM_STARS = 200
+NUM_STARS = 1000
 
 for _ in range(NUM_STARS):
-    x = random.uniform(-50, 50)
-    y = random.uniform(-50, 50)
-    z = random.uniform(-50, 50)
+    x = random.uniform(-100, 100)
+    y = random.uniform(-100, 100)
+    z = random.uniform(-100, 100)
 
     sphere(
         pos=vector(x, y, z),
@@ -20,7 +20,7 @@ for _ in range(NUM_STARS):
         emissive=True  # self-glowed 
     )
 
-# ========================================= SOLAR SYSTEM ==========================================================
+# ============================================== SOLAR SYSTEM ==========================================================
 AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       # gravitational constant
@@ -60,25 +60,30 @@ class Body(ABC):
             radius=radius,
             texture=self.texture,
             make_trail=True,
+            trail_color = color.white
         )
     
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
 
+    def body_type(self):
+        pass 
     
 class Star(Body):
-    pass
+    def body_type(self):
+        return "Star" 
     
 class Meteor(Body): 
-    pass 
-
+    def body_type(self):
+        return "Meteor"
 
 class Planet(Body):
     def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
         scaled_radius = radius * 10
         super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
-
+    def body_type(self):
+        return "Planet" 
 
 class BlackHole(Body):
 
@@ -91,15 +96,18 @@ class BlackHole(Body):
         # Make it look cooler
         self.visual.emissive = False
 
+    def body_type(self):
+        return "BlackHole"
+
 
 # Convert hex color to RGB vector to easily customize colors
-def hex_to_rgb(hex_color):
+"""def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return vector(
         int(hex_color[0:2],16)/255,       # Red
         int(hex_color[2:4],16)/255,       # Green
         int(hex_color[4:6],16)/255        # Blue
-    )
+    )"""
 
 
 Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
@@ -165,6 +173,7 @@ def on_mouse_click(evt):
         selected_target = None
         info_board.visible = False     
 
+
 scene.bind('mousedown', on_mouse_click)
 
 # ========================================= BLACK HOLE & METEOR ==========================================================
@@ -218,24 +227,98 @@ def spawn_meteor(target):
     vel = (direction * speed) + target.velocity 
     
     new_meteor = Meteor(
-        name=f"Meteor_{random.randint(100,999)}",
-        position=spawn_pos,
-        velocity=vel,
-        acceleration=[0,0,0],
-        mass=1e15,    
-        radius=0.005,   
-        color=color.red 
+    name=f"Meteor_{random.randint(100,999)}",
+    texture = None, 
+    position=spawn_pos,
+    velocity=vel,
+    acceleration=[0,0,0],
+    mass=1e15,
+    radius=0.005
     )
+
+    new_meteor.visual.color = color.white 
+    new_meteor.visual.trail_color = color.red  
     
     pending_bodies.append(new_meteor)
     print(f"Meteor spawned targeting {target.name}!") 
     
+
+#========================================== RESET BUTTON ======================================================
+def reset_simulation():
+    global bodies, Sun, black_hole, is_black_hole, pending_bodies, selected_target
+
+    # Clear all visuals
+    for b in bodies:
+        if b.visual:
+            b.visual.visible = False
+
+    # Reset flags
+    black_hole = None
+    is_black_hole = False
+    pending_bodies.clear()
+    selected_target = None
+    info_board.visible = False
+
+    # Recreate Sun
+    Sun.position = vector(0,0,0)
+    Sun.velocity = vector(0,0,0)
+    Sun.visual.visible = True
+    Sun.visual.clear_trail()
+
+    # Recreate planets (IMPORTANT: reset lại đúng initial)
+    Mercury.position = vector(0.39*AU,0,0.01*AU)
+    Mercury.velocity = vector(0,47.4*KM,0)
+
+    Venus.position = vector(0.72*AU,0,-0.015*AU)
+    Venus.velocity = vector(0,35.0*KM,0)
+
+    Earth.position = vector(1.00*AU,0,0.02*AU)
+    Earth.velocity = vector(0,29.8*KM,0)
+
+    Mars.position = vector(1.52*AU,0,-0.01*AU)
+    Mars.velocity = vector(0,24.1*KM,0)
+
+    Jupiter.position = vector(5.20*AU,0,0.03*AU)
+    Jupiter.velocity = vector(0,13.1*KM,0)
+
+    Saturn.position = vector(9.58*AU,0,-0.025*AU)
+    Saturn.velocity = vector(0,9.7*KM,0)
+
+    Uranus.position = vector(19.22*AU,0,0.015*AU)
+    Uranus.velocity = vector(0,6.8*KM,0)
+
+    Neptune.position = vector(30.05*AU,0,-0.02*AU)
+    Neptune.velocity = vector(0,5.4*KM,0)
+
+    Pluto.position = vector(39.48*AU,0,0.01*AU)
+    Pluto.velocity = vector(0,4.7*KM,0)
+
+    # Reset trails + visuals
+    for p in planets:
+        p.visual.visible = True
+        p.visual.clear_trail()
+        p.update_visual()
+
+    Sun.update_visual()
+
+    # Reset bodies list
+    bodies = [Sun] + planets
+
+    # Re-add light
+    local_light(pos=Sun.position * SCALE, color=color.white)
+
+    print("Simulation reset!")
+
+
+# ========================================= KEY INPUT ========================================================
 def key_input(evt):
     if evt.key.lower() == 'b':
         toggle_black_hole(None)
     elif evt.key.lower() == 'm':
         if selected_target is not None:
             spawn_meteor(selected_target)
+    elif evt.key.lower() == 'r':   
+        reset_simulation()
 
 scene.bind('keydown', key_input)
 
@@ -256,8 +339,7 @@ def compute_acceleration(p, bodies, G):
 
 
 t = 0
-dt = 3600 # 1 hour per frame (Good speed to watch meteors)
-
+dt = 3600 # 1 hour per frame 
 while True:
     rate(50)
     
