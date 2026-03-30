@@ -1,6 +1,6 @@
 from vpython import *
-import random 
 from abc import ABC, abstractmethod
+import random
 
 # ========================================= BACKGROUND ==========================================================
 
@@ -28,7 +28,7 @@ SCALE = 1/AU
 C = 3e8            # m/s    
 
 class Body(ABC):
-    def __init__(self, name, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05, color=color.white):
+    def __init__(self, name, texture, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05):
         self.name = name 
 
         # Check input for position
@@ -49,18 +49,18 @@ class Body(ABC):
         else:
             self.acceleration = vector(*acceleration) 
 
-        self.mass = mass                          
-        self.radius = radius                      
-        self.color = color                        
-        
+        self.mass = mass                                  
+        self.radius = radius                              
+        self.texture = texture            
+
         # 3D visual object
         self.visual = sphere(
             pos=self.position * SCALE,
             radius=radius,
-            color=color,
+            texture=self.texture,
             make_trail=True,
         )
-
+    
     def update_visual(self):
         if self.visual:
             self.visual.pos = self.position * SCALE
@@ -72,19 +72,24 @@ class Body(ABC):
 class Star(Body):
     def body_type(self):
         return "Star"
-
-class Planet(Body):
-    def body_type(self):
-        return "Planet"
-
+    
 class Meteor(Body): 
     def body_type(self):
         return "Meteor"
 
+class Planet(Body):
+    def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
+        scaled_radius = radius * 10
+        super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
+        
+    def body_type(self):
+        return "Planet"
+
 class BlackHole(Body):
-    def __init__(self, name, position, mass):
-        super().__init__(name, position, [0,0,0], [0,0,0], mass=mass, radius=0, color=color.black)
-        self.radius = (2*G*self.mass)/C**2  # schwarzchild radius 
+    def __init__(self, name, position, mass, color):
+        super().__init__(name, None, position, [0,0,0], [0,0,0], mass=mass, radius=0)
+        self.radius = (2*G*self.mass)/C**2 
+        self.visual.color = color        
         self.visual.emissive = False
 
     def body_type(self):
@@ -99,20 +104,20 @@ def hex_to_rgb(hex_color):
         int(hex_color[4:6],16)/255        # Blue
     )
 
-# Instantiate the objects
-Sun = Star("Sun", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2, color=color.yellow) 
+
+Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
 Sun.visual.emissive = True
 local_light(pos=Sun.position * SCALE, color=color.white)
 
-Mercury = Planet("Mercury", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, color=hex_to_rgb("#B3CCDB"))
-Venus   = Planet("Venus", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, color=hex_to_rgb("#F77E40"))
-Earth   = Planet("Earth", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, color=hex_to_rgb("#5789E0"))
-Mars    = Planet("Mars", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097, color=hex_to_rgb("#D2574B"))
-Jupiter = Planet("Jupiter", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, color=hex_to_rgb("#B88D7F"))
-Saturn  = Planet("Saturn", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, color=hex_to_rgb("#875B4A"))
-Uranus  = Planet("Uranus", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, color=hex_to_rgb("#9BE4EE"))
-Neptune = Planet("Neptune", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, color=hex_to_rgb("#5573E7"))
-Pluto   = Planet("Pluto", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, color=hex_to_rgb("#C3C4BB"))
+Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007)
+Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174)
+Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183)
+Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097)
+Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010)
+Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674)
+Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729)
+Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708)
+Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
@@ -176,43 +181,65 @@ def toggle_black_hole(b):
 
     if not is_black_hole:
         Sun.visual.visible = False
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10)
+
+        # Create Black Hole
+        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10, color.black)
+
+        # Replace Sun in bodies list
         bodies[0] = black_hole
+
         is_black_hole = True
+
     else:
+        # Remove Black Hole
         if black_hole:
             black_hole.visual.visible = False
+
+        # Bring Sun back
         Sun.visual.visible = True
+
+        # light 
         local_light(pos=Sun.position * SCALE, color=color.white)
+
+        # Replace back
         bodies[0] = Sun
+
         is_black_hole = False
 
 def spawn_meteor(target):
     global pending_bodies
     
-    # Spawn the meteor roughly 1.5 AU away in a random direction
-    offset_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
-    spawn_pos = target.position + (offset_dir * AU * 1.5)
+    # Spawns at least 3 AU away from the Sun, or 2 AU further than the target planet
+    spawn_radius = max(3 * AU, mag(target.position) + 2 * AU)
     
-    # Calculate a velocity aimed right at the target
+    # Calculate a random starting point at that distance
+    spawn_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
+    spawn_pos = spawn_dir * spawn_radius
+    
     direction = (target.position - spawn_pos).norm()
-    speed = 80 * KM 
     
-    vel = (direction * speed) + target.velocity 
+    # High speed ensures a hyperbolic trajectory that cuts across orbits
+    speed = 300 * KM 
+    vel = direction * speed 
     
     new_meteor = Meteor(
         name=f"Meteor_{random.randint(100,999)}",
+        texture=None,         
         position=spawn_pos,
         velocity=vel,
         acceleration=[0,0,0],
-        mass=1e15,    
-        radius=0.005,   
-        color=color.red 
+        mass=1e12,     
+        radius=0.01,  
     )
     
-    pending_bodies.append(new_meteor)
-    print(f"Meteor spawned targeting {target.name}!") 
+    new_meteor.visual.color = color.red  
+    new_meteor.visual.trail_color = color.red
+    new_meteor.visual.emissive = True
+    new_meteor.visual.retain = 2000
     
+    pending_bodies.append(new_meteor)
+    print(f"Meteor is coming to hit {target.name}!")
+
 def key_input(evt):
     if evt.key.lower() == 'b':
         toggle_black_hole(None)
@@ -223,6 +250,19 @@ def key_input(evt):
 scene.bind('keydown', key_input)
 
 # ========================================= MAIN LOOP ==========================================================
+active_explosions = []
+
+def trigger_explosion(hit_position):
+    # Create a bright orange, glowing sphere at the collision point
+    explosion = sphere(
+        pos=hit_position * SCALE, 
+        radius=0.1, 
+        color=vector(1, 0.5, 0), # Orange/Fire color
+        emissive=True, 
+        opacity=1.0
+    )
+    active_explosions.append(explosion)
+    print("BOOM! Collision detected!")
 
 def compute_acceleration(p, bodies, G):
     total_acc = vector(0, 0, 0)
@@ -248,6 +288,36 @@ while True:
         bodies.extend(pending_bodies)
         pending_bodies.clear()
         
+    # Animate Explosions
+    for exp in active_explosions[:]:
+        exp.radius += 0.015       # Make the fireball grow
+        exp.opacity -= 0.015      # Make it fade out gradually
+        if exp.opacity <= 0:
+            exp.visible = False   # Hide it completely
+            active_explosions.remove(exp) # Clean up memory
+            
+    # Handle Collisions
+    meteors_to_destroy = []
+    for body in bodies:
+        if body.body_type() == "Meteor":
+            for target in bodies:
+                if target.body_type() in ["Planet", "Star", "Black Hole"]:
+                    # Check distance between meteor and planet
+                    distance = mag(body.position - target.position)
+                    
+                    # If it gets within 0.05 AU
+                    if distance < 0.05 * AU:
+                        trigger_explosion(body.position) 
+                        meteors_to_destroy.append(body)
+                        break
+                        
+    for m in meteors_to_destroy:
+        if m in bodies:
+            m.visual.visible = False
+            m.visual.clear_trail() # Erase the red line left behind
+            bodies.remove(m)
+            
+    # Physics Calculations
     for p in bodies:
         p.acceleration = compute_acceleration(p, bodies, G)
 
