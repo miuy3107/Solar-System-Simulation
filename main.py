@@ -4,7 +4,7 @@ import random
 
 # ============================================= BACKGROUND ==========================================================
 
-scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
+
 
 NUM_STARS = 1000
 
@@ -49,11 +49,10 @@ class Body(ABC):
         else:
             self._acceleration = vector(*acceleration) 
 
-        self.mass = mass                          
-        self.radius = radius                      
+        self.mass = mass                                  
+        self.radius = radius                              
         self.texture = texture            
 
-        
         # 3D visual object
         self.visual = sphere(
             pos=self._position * SCALE,
@@ -83,18 +82,15 @@ class Planet(Body):
     def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
         scaled_radius = radius * 10
         super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
+        
     def body_type(self):
-        return "Planet" 
+        return "Planet"
 
 class BlackHole(Body):
-
     def __init__(self, name, position, mass, color):
-
         super().__init__(name, None, position, [0,0,0], [0,0,0], mass=mass, radius=0)
-        self.radius = (2*G*self.mass)/C**2  #schwarzchild radius 
-        self.color = color
-
-        # Make it look cooler
+        self.radius = (2*G*self.mass)/C**2 
+        self.visual.color = color        
         self.visual.emissive = False
 
     def body_type(self):
@@ -206,31 +202,36 @@ def toggle_black_hole(b):
 def spawn_meteor(target):
     global pending_bodies
     
-    # Spawn the meteor roughly 1.5 AU away in a random direction
-    offset_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
-    spawn_pos = target.position + (offset_dir * AU * 1.5)
+    # Spawns at least 3 AU away from the Sun, or 2 AU further than the target planet
+    spawn_radius = max(3 * AU, mag(target.position) + 2 * AU)
     
-    # Calculate a velocity aimed right at the target
+    # Calculate a random starting point at that distance
+    spawn_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
+    spawn_pos = spawn_dir * spawn_radius
+    
     direction = (target.position - spawn_pos).norm()
-    speed = 80 * KM 
     
-    vel = (direction * speed) + target.velocity 
+    # High speed ensures a hyperbolic trajectory that cuts across orbits
+    speed = 300 * KM 
+    vel = direction * speed 
     
     new_meteor = Meteor(
-    name=f"Meteor_{random.randint(100,999)}",
-    texture = None, 
-    position=spawn_pos,
-    velocity=vel,
-    acceleration=[0,0,0],
-    mass=1e15,
-    radius=0.005
+        name=f"Meteor_{random.randint(100,999)}",
+        texture=None,         
+        position=spawn_pos,
+        velocity=vel,
+        acceleration=[0,0,0],
+        mass=1e12,     
+        radius=0.01,  
     )
 
     new_meteor.visual.color = color.white 
     new_meteor.visual.trail_color = color.red  
     
-    pending_bodies.append(new_meteor)
-    print(f"Meteor spawned targeting {target.name}!") 
+    new_meteor.visual.color = color.red  
+    new_meteor.visual.trail_color = color.red
+    new_meteor.visual.emissive = True
+    new_meteor.visual.retain = 2000
     
 
 #========================================== RESET BUTTON ======================================================
@@ -301,6 +302,9 @@ def reset_simulation():
 
 
 # ========================================= KEY INPUT ========================================================
+    pending_bodies.append(new_meteor)
+    print(f"Meteor is coming to hit {target.name}!")
+
 def key_input(evt):
     if evt.key.lower() == 'b':
         toggle_black_hole(None)
@@ -313,6 +317,19 @@ def key_input(evt):
 scene.bind('keydown', key_input)
 
 # ========================================= MAIN LOOP ==========================================================
+active_explosions = []
+
+def trigger_explosion(hit_position):
+    # Create a bright orange, glowing sphere at the collision point
+    explosion = sphere(
+        pos=hit_position * SCALE, 
+        radius=0.1, 
+        color=vector(1, 0.5, 0), # Orange/Fire color
+        emissive=True, 
+        opacity=1.0
+    )
+    active_explosions.append(explosion)
+    print("BOOM! Collision detected!")
 
 def compute_acceleration(p, bodies, G):
     total_acc = vector(0, 0, 0)
@@ -327,33 +344,71 @@ def compute_acceleration(p, bodies, G):
         
     return total_acc
 
+if __name__ == "__main__":
+    active_explosions = []
+    scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
+    t = 0
+    dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
-t = 0
-dt = 3600 # 1 hour per frame 
-while True:
-    rate(50)
-    
-    if pending_bodies:
-        bodies.extend(pending_bodies)
-        pending_bodies.clear()
+    while True:
+        rate(50)
         
-    for p in bodies:
-        p._acceleration = compute_acceleration(p, bodies, G)
+        if pending_bodies:
+            bodies.extend(pending_bodies)
+            pending_bodies.clear()
+            
+        # Animate Explosions
+        for exp in active_explosions[:]:
+            exp.radius += 0.015       # Make the fireball grow
+            exp.opacity -= 0.015      # Make it fade out gradually
+            if exp.opacity <= 0:
+                exp.visible = False   # Hide it completely
+                active_explosions.remove(exp) # Clean up memory
+                
+        # Handle Collisions
+        meteors_to_destroy = []
+        for body in bodies:
+            if body.body_type() == "Meteor":
+                for target in bodies:
+                    if target.body_type() in ["Planet", "Star", "Black Hole"]:
+                        # Check distance between meteor and planet
+                        distance = mag(body.position - target.position)
+                        
+                        # If it gets within 0.05 AU
+                        if distance < 0.05 * AU:
+                            trigger_explosion(body.position) 
+                            meteors_to_destroy.append(body)
+                            break
+                            
+        for m in meteors_to_destroy:
+            if m in bodies:
+                m.visual.visible = False
+                m.visual.clear_trail() # Erase the red line left behind
+                bodies.remove(m)
+        for b in bodies[:]: 
+            if b.body_type() == "Meteor":
+                if mag(b.position) > 20 * AU:
+                    b.visual.visible = False
+                    b.visual.make_trail = False 
+                    b.visual.clear_trail()      
+                    bodies.remove(b)
+                
+        # Physics Calculations
+        for p in bodies:
+            p._acceleration = compute_acceleration(p, bodies, G)
 
-    for p in bodies:
-        p._position += p._velocity * dt + 0.5 * p._acceleration * dt**2
+        for p in bodies:
+            p._position += p._velocity * dt + 0.5 * p._acceleration * dt**2
 
-    new_acc_list = []
-    for p in bodies:
-        new_acc_list.append(compute_acceleration(p, bodies, G))
+        new_acc_list = []
+        for p in bodies:
+            new_acc_list.append(compute_acceleration(p, bodies, G))
 
-    for i, p in enumerate(bodies):
-        p._velocity += 0.5 * (p._acceleration + new_acc_list[i]) * dt
+        for i, p in enumerate(bodies):
+            p._velocity += 0.5 * (p._acceleration + new_acc_list[i]) * dt
+            p._acceleration = new_acc_list[i]
 
-    for i, p in enumerate(bodies):
-        p._acceleration = new_acc_list[i]
+        for p in bodies:
+            p.update_visual()
 
-    for p in bodies:
-        p.update_visual()
-
-    t += dt
+        t += dt
