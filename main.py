@@ -33,21 +33,21 @@ class Body(ABC):
 
         # Check input for position
         if isinstance(position, vector):     
-            self.position = position
+            self._position = position
         else:
-            self.position = vector(*position)
+            self._position = vector(*position)
 
         # Check input for velocity
         if isinstance(velocity, vector):
-            self.velocity = velocity
+            self._velocity = velocity
         else:
-            self.velocity = vector(*velocity)         
+            self._velocity = vector(*velocity)         
 
         # Check input for acceleration
         if isinstance(acceleration, vector):
-            self.acceleration = acceleration
+            self._acceleration = acceleration
         else:
-            self.acceleration = vector(*acceleration) 
+            self._acceleration = vector(*acceleration) 
 
         self.mass = mass                          
         self.radius = radius                      
@@ -56,7 +56,7 @@ class Body(ABC):
         
         # 3D visual object
         self.visual = sphere(
-            pos=self.position * SCALE,
+            pos=self._position * SCALE,
             radius=radius,
             texture=self.texture,
             make_trail=True,
@@ -65,7 +65,7 @@ class Body(ABC):
     
     def update_visual(self):
         if self.visual:
-            self.visual.pos = self.position * SCALE
+            self.visual.pos = self._position * SCALE
             
     @abstractmethod 
     def body_type(self):
@@ -338,20 +338,20 @@ while True:
         pending_bodies.clear()
         
     for p in bodies:
-        p.acceleration = compute_acceleration(p, bodies, G)
+        p._acceleration = compute_acceleration(p, bodies, G)
 
     for p in bodies:
-        p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
+        p._position += p._velocity * dt + 0.5 * p._acceleration * dt**2
 
     new_acc_list = []
     for p in bodies:
         new_acc_list.append(compute_acceleration(p, bodies, G))
 
     for i, p in enumerate(bodies):
-        p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
+        p._velocity += 0.5 * (p._acceleration + new_acc_list[i]) * dt
 
     for i, p in enumerate(bodies):
-        p.acceleration = new_acc_list[i]
+        p._acceleration = new_acc_list[i]
 
     for p in bodies:
         p.update_visual()
