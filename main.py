@@ -4,7 +4,7 @@ import random
 
 # ============================================= BACKGROUND ==========================================================
 
-
+scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
 NUM_STARS = 1000
 
@@ -98,7 +98,7 @@ class BlackHole(Body):
 
 Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
 Sun.visual.emissive = True
-local_light(pos=Sun.position * SCALE, color=color.white)
+local_light(pos=Sun._position * SCALE, color=color.white)
 
 # NOTE: The missing [0, 0, 0] acceleration vector was added to the planets and meteor below to prevent the previous crash!
 Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007)
@@ -176,7 +176,7 @@ def toggle_black_hole(b):
         Sun.visual.visible = False
 
         # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10, color.black)
+        black_hole = BlackHole("BlackHole", Sun._position, Sun.mass*10, color.black)
 
         # Replace Sun in bodies list
         bodies[0] = black_hole
@@ -203,16 +203,16 @@ def spawn_meteor(target):
     global pending_bodies
     
     # Spawns at least 3 AU away from the Sun, or 2 AU further than the target planet
-    spawn_radius = max(3 * AU, mag(target.position) + 2 * AU)
+    spawn_radius = max(3 * AU, mag(target._position) + 2 * AU)
     
     # Calculate a random starting point at that distance
     spawn_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
     spawn_pos = spawn_dir * spawn_radius
     
-    direction = (target.position - spawn_pos).norm()
+    direction = (target._position - spawn_pos).norm()
     
     # High speed ensures a hyperbolic trajectory that cuts across orbits
-    speed = 300 * KM 
+    speed = 1000 * KM 
     vel = direction * speed 
     
     new_meteor = Meteor(
@@ -225,13 +225,14 @@ def spawn_meteor(target):
         radius=0.01,  
     )
 
-    new_meteor.visual.color = color.white 
-    new_meteor.visual.trail_color = color.red  
     
-    new_meteor.visual.color = color.red  
+    new_meteor.visual.color = color.white
     new_meteor.visual.trail_color = color.red
     new_meteor.visual.emissive = True
     new_meteor.visual.retain = 2000
+
+    pending_bodies.append(new_meteor)
+    print(f"Meteor is coming to hit {target.name}!")
     
 
 #========================================== RESET BUTTON ======================================================
@@ -251,38 +252,38 @@ def reset_simulation():
     info_board.visible = False
 
     # Recreate Sun
-    Sun.position = vector(0,0,0)
-    Sun.velocity = vector(0,0,0)
+    Sun._position = vector(0,0,0)
+    Sun._velocity = vector(0,0,0)
     Sun.visual.visible = True
     Sun.visual.clear_trail()
 
     # Recreate planets (IMPORTANT: reset lại đúng initial)
-    Mercury.position = vector(0.39*AU,0,0.01*AU)
-    Mercury.velocity = vector(0,47.4*KM,0)
+    Mercury._position = vector(0.39*AU,0,0.01*AU)
+    Mercury._velocity = vector(0,47.4*KM,0)
 
-    Venus.position = vector(0.72*AU,0,-0.015*AU)
-    Venus.velocity = vector(0,35.0*KM,0)
+    Venus._position = vector(0.72*AU,0,-0.015*AU)
+    Venus._velocity = vector(0,35.0*KM,0)
 
-    Earth.position = vector(1.00*AU,0,0.02*AU)
-    Earth.velocity = vector(0,29.8*KM,0)
+    Earth._position = vector(1.00*AU,0,0.02*AU)
+    Earth._velocity = vector(0,29.8*KM,0)
 
-    Mars.position = vector(1.52*AU,0,-0.01*AU)
-    Mars.velocity = vector(0,24.1*KM,0)
+    Mars._position = vector(1.52*AU,0,-0.01*AU)
+    Mars._velocity = vector(0,24.1*KM,0)
 
-    Jupiter.position = vector(5.20*AU,0,0.03*AU)
-    Jupiter.velocity = vector(0,13.1*KM,0)
+    Jupiter._position = vector(5.20*AU,0,0.03*AU)
+    Jupiter._velocity = vector(0,13.1*KM,0)
 
-    Saturn.position = vector(9.58*AU,0,-0.025*AU)
-    Saturn.velocity = vector(0,9.7*KM,0)
+    Saturn._position = vector(9.58*AU,0,-0.025*AU)
+    Saturn._velocity = vector(0,9.7*KM,0)
 
-    Uranus.position = vector(19.22*AU,0,0.015*AU)
-    Uranus.velocity = vector(0,6.8*KM,0)
+    Uranus._position = vector(19.22*AU,0,0.015*AU)
+    Uranus._velocity = vector(0,6.8*KM,0)
 
-    Neptune.position = vector(30.05*AU,0,-0.02*AU)
-    Neptune.velocity = vector(0,5.4*KM,0)
+    Neptune._position = vector(30.05*AU,0,-0.02*AU)
+    Neptune._velocity = vector(0,5.4*KM,0)
 
-    Pluto.position = vector(39.48*AU,0,0.01*AU)
-    Pluto.velocity = vector(0,4.7*KM,0)
+    Pluto._position = vector(39.48*AU,0,0.01*AU)
+    Pluto._velocity = vector(0,4.7*KM,0)
 
     # Reset trails + visuals
     for p in planets:
@@ -296,14 +297,12 @@ def reset_simulation():
     bodies = [Sun] + planets
 
     # Re-add light
-    local_light(pos=Sun.position * SCALE, color=color.white)
+    local_light(pos=Sun._position * SCALE, color=color.white)
 
     print("Simulation reset!")
 
 
 # ========================================= KEY INPUT ========================================================
-    pending_bodies.append(new_meteor)
-    print(f"Meteor is coming to hit {target.name}!")
 
 def key_input(evt):
     if evt.key.lower() == 'b':
@@ -336,7 +335,7 @@ def compute_acceleration(p, bodies, G):
     for other in bodies:
         if p is other:
             continue
-        r_vec = p.position - other.position
+        r_vec = p._position - other._position
         dist = mag(r_vec)
         if dist < 1e-5:
             continue
@@ -346,7 +345,6 @@ def compute_acceleration(p, bodies, G):
 
 if __name__ == "__main__":
     active_explosions = []
-    scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
     t = 0
     dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
@@ -370,13 +368,13 @@ if __name__ == "__main__":
         for body in bodies:
             if body.body_type() == "Meteor":
                 for target in bodies:
-                    if target.body_type() in ["Planet", "Star", "Black Hole"]:
+                    if target.body_type() in ["Planet", "Star", "BlackHole"]:
                         # Check distance between meteor and planet
-                        distance = mag(body.position - target.position)
+                        distance = mag(body._position - target._position)
                         
                         # If it gets within 0.05 AU
                         if distance < 0.05 * AU:
-                            trigger_explosion(body.position) 
+                            trigger_explosion(body._position) 
                             meteors_to_destroy.append(body)
                             break
                             
@@ -387,7 +385,7 @@ if __name__ == "__main__":
                 bodies.remove(m)
         for b in bodies[:]: 
             if b.body_type() == "Meteor":
-                if mag(b.position) > 20 * AU:
+                if mag(b._position) > 20 * AU:
                     b.visual.visible = False
                     b.visual.make_trail = False 
                     b.visual.clear_trail()      
