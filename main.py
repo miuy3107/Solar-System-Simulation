@@ -4,7 +4,7 @@ import random
 
 # ========================================= BACKGROUND ==========================================================
 
-scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
+
 
 NUM_STARS = 200
 
@@ -277,64 +277,71 @@ def compute_acceleration(p, bodies, G):
         
     return total_acc
 
+if __name__ == "__main__":
+    active_explosions = []
+    scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
+    t = 0
+    dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
-t = 0
-dt = 3600 # 1 hour per frame (Good speed to watch meteors)
-
-while True:
-    rate(50)
-    
-    if pending_bodies:
-        bodies.extend(pending_bodies)
-        pending_bodies.clear()
+    while True:
+        rate(50)
         
-    # Animate Explosions
-    for exp in active_explosions[:]:
-        exp.radius += 0.015       # Make the fireball grow
-        exp.opacity -= 0.015      # Make it fade out gradually
-        if exp.opacity <= 0:
-            exp.visible = False   # Hide it completely
-            active_explosions.remove(exp) # Clean up memory
+        if pending_bodies:
+            bodies.extend(pending_bodies)
+            pending_bodies.clear()
             
-    # Handle Collisions
-    meteors_to_destroy = []
-    for body in bodies:
-        if body.body_type() == "Meteor":
-            for target in bodies:
-                if target.body_type() in ["Planet", "Star", "Black Hole"]:
-                    # Check distance between meteor and planet
-                    distance = mag(body.position - target.position)
-                    
-                    # If it gets within 0.05 AU
-                    if distance < 0.05 * AU:
-                        trigger_explosion(body.position) 
-                        meteors_to_destroy.append(body)
-                        break
+        # Animate Explosions
+        for exp in active_explosions[:]:
+            exp.radius += 0.015       # Make the fireball grow
+            exp.opacity -= 0.015      # Make it fade out gradually
+            if exp.opacity <= 0:
+                exp.visible = False   # Hide it completely
+                active_explosions.remove(exp) # Clean up memory
+                
+        # Handle Collisions
+        meteors_to_destroy = []
+        for body in bodies:
+            if body.body_type() == "Meteor":
+                for target in bodies:
+                    if target.body_type() in ["Planet", "Star", "Black Hole"]:
+                        # Check distance between meteor and planet
+                        distance = mag(body.position - target.position)
                         
-    for m in meteors_to_destroy:
-        if m in bodies:
-            m.visual.visible = False
-            m.visual.clear_trail() # Erase the red line left behind
-            bodies.remove(m)
-            
-    # Physics Calculations
-    for p in bodies:
-        p.acceleration = compute_acceleration(p, bodies, G)
+                        # If it gets within 0.05 AU
+                        if distance < 0.05 * AU:
+                            trigger_explosion(body.position) 
+                            meteors_to_destroy.append(body)
+                            break
+                            
+        for m in meteors_to_destroy:
+            if m in bodies:
+                m.visual.visible = False
+                m.visual.clear_trail() # Erase the red line left behind
+                bodies.remove(m)
+        for b in bodies[:]: 
+            if b.body_type() == "Meteor":
+                if mag(b.position) > 20 * AU:
+                    b.visual.visible = False
+                    b.visual.make_trail = False 
+                    b.visual.clear_trail()      
+                    bodies.remove(b)
+                
+        # Physics Calculations
+        for p in bodies:
+            p.acceleration = compute_acceleration(p, bodies, G)
 
-    for p in bodies:
-        p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
+        for p in bodies:
+            p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
 
-    new_acc_list = []
-    for p in bodies:
-        new_acc_list.append(compute_acceleration(p, bodies, G))
+        new_acc_list = []
+        for p in bodies:
+            new_acc_list.append(compute_acceleration(p, bodies, G))
 
-    for i, p in enumerate(bodies):
-        p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
+        for i, p in enumerate(bodies):
+            p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
+            p.acceleration = new_acc_list[i]
 
-    for i, p in enumerate(bodies):
-        p.acceleration = new_acc_list[i]
+        for p in bodies:
+            p.update_visual()
 
-    for p in bodies:
-        p.update_visual()
-
-    t += dt
+        t += dt
