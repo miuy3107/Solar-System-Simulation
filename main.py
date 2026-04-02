@@ -3,16 +3,16 @@ from abc import ABC, abstractmethod
 import random
 import math
 
-# ========================================= BACKGROUND ==========================================================
+# ============================================= BACKGROUND ==========================================================
 
-scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
+
 
 NUM_STARS = 200
 
 for _ in range(NUM_STARS):
-    x = random.uniform(-50, 50)
-    y = random.uniform(-50, 50)
-    z = random.uniform(-50, 50)
+    x = random.uniform(-100, 100)
+    y = random.uniform(-100, 100)
+    z = random.uniform(-100, 100)
 
     sphere(
         pos=vector(x, y, z),
@@ -21,7 +21,7 @@ for _ in range(NUM_STARS):
         emissive=True  # self-glowed 
     )
 
-# ========================================= SOLAR SYSTEM ==========================================================
+# ============================================== SOLAR SYSTEM ==========================================================
 AU = 1.496e11      # meters
 KM = 1000          # meters
 G = 6.67e-11       # gravitational constant
@@ -34,21 +34,21 @@ class Body(ABC):
 
         # Check input for position
         if isinstance(position, vector):     
-            self.position = position
+            self._position = position
         else:
-            self.position = vector(*position)
+            self._position = vector(*position)
 
         # Check input for velocity
         if isinstance(velocity, vector):
-            self.velocity = velocity
+            self._velocity = velocity
         else:
-            self.velocity = vector(*velocity)         
+            self._velocity = vector(*velocity)         
 
         # Check input for acceleration
         if isinstance(acceleration, vector):
-            self.acceleration = acceleration
+            self._acceleration = acceleration
         else:
-            self.acceleration = vector(*acceleration) 
+            self._acceleration = vector(*acceleration) 
 
         self.mass = mass                                  
         self.radius = radius                              
@@ -57,30 +57,31 @@ class Body(ABC):
 
         # 3D visual object
         self.visual = sphere(
-            pos=self.position * SCALE,
+            pos=self._position * SCALE,
             radius=radius,
             texture=self.texture,
             make_trail=True,
+            trail_color = color.white
         )
     
     def update_visual(self):
         if self.visual:
-            self.visual.pos = self.position * SCALE
-
-    @abstractmethod
+            self.visual.pos = self._position * SCALE
+            
+    @abstractmethod 
     def body_type(self):
-        pass
-
+        pass 
+    
 class Star(Body):
     def body_type(self):
-        return "Star"
+        return "Star" 
     
 class Meteor(Body): 
     def body_type(self):
         return "Meteor"
 
 class Planet(Body):
-    def __init__(self, name, texture, position, velocity, acceleration, mass, radius, semi_major_axis, eccentricity,): 
+    def __init__(self, name, texture, position, velocity, acceleration, mass, radius, semi_major_axis, eccentricity): 
         scaled_radius = radius * 10
         super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
         self.semi_major_axis = semi_major_axis
@@ -96,36 +97,26 @@ class BlackHole(Body):
         self.visual.emissive = False
 
     def body_type(self):
-        return "Black Hole"
-
-# Convert hex color to RGB vector to easily customize colors
-def hex_to_rgb(hex_color):
-    hex_color = hex_color.lstrip('#')
-    return vector(
-        int(hex_color[0:2],16)/255,       # Red
-        int(hex_color[2:4],16)/255,       # Green
-        int(hex_color[4:6],16)/255        # Blue
-    )
-
+        return "BlackHole"
 
 Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg", [0, 0, 0], [0, 0, 0], [0, 0, 0], mass=1.989e30, radius=0.2) 
 Sun.visual.emissive = True
-local_light(pos=Sun.position * SCALE, color=color.white)
+local_light(pos=Sun._position * SCALE, color=color.white)
 
-Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, semi_major_axis=0.387,  eccentricity=0.2056)
-Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, semi_major_axis=0.723,  eccentricity=0.0068)
-Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, semi_major_axis=1.000,  eccentricity=0.0167)
-Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097,semi_major_axis=1.524,  eccentricity=0.0934)
-Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, semi_major_axis=5.204,  eccentricity=0.0485)
-Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, semi_major_axis=9.582,  eccentricity=0.0555)
-Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, semi_major_axis=19.201,  eccentricity=0.0463)
-Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, semi_major_axis=30.047,  eccentricity=0.0090)
-Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, semi_major_axis=39.482,  eccentricity=0.2488)
+Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, semi_major_axis=0.387, eccentricity=0.2056)
+Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, semi_major_axis= 0.723, eccentricity=0.0068)
+Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, semi_major_axis=1.000, eccentricity=0.0167)
+Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097, semi_major_axis=1.524, eccentricity=0.0934)
+Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, semi_major_axis=5.204, eccentricity=0.0485)
+Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, semi_major_axis=9.582, eccentricity=0.0555)
+Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, semi_major_axis=19.201, eccentricity=0.0463)
+Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, semi_major_axis=30.047, eccentricity=0.0090)
+Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, semi_major_axis=39.482, eccentricity=0.2488)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
 
-# ========================================= INTERACTIVE FEATURE ==========================================================
+# ========================================= FUN FACT ==========================================================
 
 planet_facts = {
     "Sun": "Temperature: 5778 K\nFun fact: Contains 99.86% of the Solar System's mass",
@@ -170,6 +161,7 @@ def on_mouse_click(evt):
         selected_target = None
         info_board.visible = False     
 
+
 scene.bind('mousedown', on_mouse_click)
 
 # ========================================= BLACK HOLE & METEOR ==========================================================
@@ -186,7 +178,7 @@ def toggle_black_hole(b):
         Sun.visual.visible = False
 
         # Create Black Hole
-        black_hole = BlackHole("BlackHole", Sun.position, Sun.mass*10, color.black)
+        black_hole = BlackHole("BlackHole", Sun._position, Sun.mass*10, color.black)
 
         # Replace Sun in bodies list
         bodies[0] = black_hole
@@ -213,16 +205,16 @@ def spawn_meteor(target):
     global pending_bodies
     
     # Spawns at least 3 AU away from the Sun, or 2 AU further than the target planet
-    spawn_radius = max(3 * AU, mag(target.position) + 2 * AU)
+    spawn_radius = max(3 * AU, mag(target._position) + 2 * AU)
     
     # Calculate a random starting point at that distance
     spawn_dir = vector(random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(-0.1, 0.1)).norm()
     spawn_pos = spawn_dir * spawn_radius
     
-    direction = (target.position - spawn_pos).norm()
+    direction = (target._position - spawn_pos).norm()
     
     # High speed ensures a hyperbolic trajectory that cuts across orbits
-    speed = 300 * KM 
+    speed = 1000 * KM 
     vel = direction * speed 
     
     new_meteor = Meteor(
@@ -234,14 +226,85 @@ def spawn_meteor(target):
         mass=1e12,     
         radius=0.01,  
     )
+
     
-    new_meteor.visual.color = color.red  
+    new_meteor.visual.color = color.white
     new_meteor.visual.trail_color = color.red
     new_meteor.visual.emissive = True
     new_meteor.visual.retain = 2000
-    
+
     pending_bodies.append(new_meteor)
     print(f"Meteor is coming to hit {target.name}!")
+    
+
+#========================================== RESET BUTTON ======================================================
+def reset_simulation():
+    global bodies, Sun, black_hole, is_black_hole, pending_bodies, selected_target
+
+    # Clear all visuals
+    for b in bodies:
+        if b.visual:
+            b.visual.visible = False
+
+    # Reset flags
+    black_hole = None
+    is_black_hole = False
+    pending_bodies.clear()
+    selected_target = None
+    info_board.visible = False
+
+    # Recreate Sun
+    Sun._position = vector(0,0,0)
+    Sun._velocity = vector(0,0,0)
+    Sun.visual.visible = True
+    Sun.visual.clear_trail()
+
+    # Recreate planets (IMPORTANT: reset lại đúng initial)
+    Mercury._position = vector(0.39*AU,0,0.01*AU)
+    Mercury._velocity = vector(0,47.4*KM,0)
+
+    Venus._position = vector(0.72*AU,0,-0.015*AU)
+    Venus._velocity = vector(0,35.0*KM,0)
+
+    Earth._position = vector(1.00*AU,0,0.02*AU)
+    Earth._velocity = vector(0,29.8*KM,0)
+
+    Mars._position = vector(1.52*AU,0,-0.01*AU)
+    Mars._velocity = vector(0,24.1*KM,0)
+
+    Jupiter._position = vector(5.20*AU,0,0.03*AU)
+    Jupiter._velocity = vector(0,13.1*KM,0)
+
+    Saturn._position = vector(9.58*AU,0,-0.025*AU)
+    Saturn._velocity = vector(0,9.7*KM,0)
+
+    Uranus._position = vector(19.22*AU,0,0.015*AU)
+    Uranus._velocity = vector(0,6.8*KM,0)
+
+    Neptune._position = vector(30.05*AU,0,-0.02*AU)
+    Neptune._velocity = vector(0,5.4*KM,0)
+
+    Pluto._position = vector(39.48*AU,0,0.01*AU)
+    Pluto._velocity = vector(0,4.7*KM,0)
+
+    # Reset trails + visuals
+    for p in planets:
+        p.visual.visible = True
+        p.visual.clear_trail()
+        p.update_visual()
+
+    Sun.update_visual()
+
+    # Reset bodies list
+    bodies = [Sun] + planets
+
+    # Re-add light
+    local_light(pos=Sun._position * SCALE, color=color.white)
+
+    print("Simulation reset!")
+
+
+# ========================================= KEY INPUT ========================================================
 
 def key_input(evt):
     if evt.key.lower() == 'b':
@@ -249,6 +312,8 @@ def key_input(evt):
     elif evt.key.lower() == 'm':
         if selected_target is not None:
             spawn_meteor(selected_target)
+    elif evt.key.lower() == 'r':   
+        reset_simulation()
 
 scene.bind('keydown', key_input)
 
@@ -272,7 +337,7 @@ def compute_acceleration(p, bodies, G):
     for other in bodies:
         if p is other:
             continue
-        r_vec = p.position - other.position
+        r_vec = p._position - other._position
         dist = mag(r_vec)
         if dist < 1e-5:
             continue
@@ -281,18 +346,16 @@ def compute_acceleration(p, bodies, G):
     return total_acc
 
 for data in planets:
-    a_meters = data.semi_major_axis * AU  # Đổi ra mét
+    a_meters = data.semi_major_axis * AU  
     e = data.eccentricity
-    
-    # Tính Vị trí (Cận điểm) và Vận tốc chính xác
     r_peri = a_meters * (1 - e)
     v_peri = math.sqrt((G * Sun.mass / a_meters) * ((1 + e) / (1 - e)))
-    
-    data.position = vector(r_peri, 0, 0)
-    data.velocity = vector(0, v_peri, 0)
+    data._position = vector(r_peri, 0, 0)
+    data._velocity = vector(0, v_peri, 0)
     data.visual.clear_trail()
 
 
+scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 t = 0
 dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
@@ -341,18 +404,18 @@ while True:
             
     # Physics Calculations
     for p in bodies:
-        p.acceleration = compute_acceleration(p, bodies, G)
+        p._acceleration = compute_acceleration(p, bodies, G)
 
     for p in bodies:
-        p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
+        p._position += p._velocity * dt + 0.5 * p._acceleration * dt**2
 
     new_acc_list = []
     for p in bodies:
         new_acc_list.append(compute_acceleration(p, bodies, G))
 
     for i, p in enumerate(bodies):
-        p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
-        p.acceleration = new_acc_list[i]
+        p._velocity += 0.5 * (p._acceleration + new_acc_list[i]) * dt
+        p._acceleration = new_acc_list[i]
 
     for p in bodies:
         p.update_visual()
