@@ -1,10 +1,11 @@
 from vpython import *
 from abc import ABC, abstractmethod
 import random
+import math
 
 # ========================================= BACKGROUND ==========================================================
 
-
+scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
 NUM_STARS = 200
 
@@ -51,7 +52,8 @@ class Body(ABC):
 
         self.mass = mass                                  
         self.radius = radius                              
-        self.texture = texture            
+        self.texture = texture 
+             
 
         # 3D visual object
         self.visual = sphere(
@@ -78,10 +80,11 @@ class Meteor(Body):
         return "Meteor"
 
 class Planet(Body):
-    def __init__(self, name, texture, position, velocity, acceleration, mass, radius): 
+    def __init__(self, name, texture, position, velocity, acceleration, mass, radius, semi_major_axis, eccentricity,): 
         scaled_radius = radius * 10
         super().__init__(name, texture, position, velocity, acceleration, mass=mass, radius=scaled_radius)
-        
+        self.semi_major_axis = semi_major_axis
+        self.eccentricity = eccentricity
     def body_type(self):
         return "Planet"
 
@@ -109,15 +112,15 @@ Sun = Star("Sun","https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsyste
 Sun.visual.emissive = True
 local_light(pos=Sun.position * SCALE, color=color.white)
 
-Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007)
-Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174)
-Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183)
-Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097)
-Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010)
-Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674)
-Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729)
-Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708)
-Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034)
+Mercury = Planet("Mercury", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRazoRKaLCrMI7lURGR9xv8mKxPThr38wRkjQ&s", [0.39*AU,0,0.01*AU], [0,47.4*KM,0], [0,0,0], mass=3.30e23, radius=0.0007, semi_major_axis=0.387,  eccentricity=0.2056)
+Venus   = Planet("Venus", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRE7q_NoC49WiU1JYZAZdMEHD5sl_Bli3TiOw&s", [0.72*AU,0,-0.015*AU], [0,35.0*KM,0], [0,0,0], mass=4.87e24, radius=0.00174, semi_major_axis=0.723,  eccentricity=0.0068)
+Earth   = Planet("Earth", "https://t3.ftcdn.net/jpg/03/64/91/04/360_F_364910470_DCjyTv7AlFX0or7TGEcJWkz7JDLnCE5G.jpg", [1.00*AU,0,0.02*AU], [0,29.8*KM,0], [0,0,0], mass=5.97e24, radius=0.00183, semi_major_axis=1.000,  eccentricity=0.0167)
+Mars    = Planet("Mars","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQc0ELDdWdnToVXeznMHPNmZPjB9-jKy1p68Q&s", [1.52*AU,0,-0.01*AU], [0,24.1*KM,0], [0,0,0], mass=6.42e23, radius=0.00097,semi_major_axis=1.524,  eccentricity=0.0934)
+Jupiter = Planet("Jupiter","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_ABVh6X-rxANutcMkEqX0Q6fQtFt7ERZPkQ&s", [5.20*AU,0,0.03*AU], [0,13.1*KM,0], [0,0,0], mass=1.898e27, radius=0.02010, semi_major_axis=5.204,  eccentricity=0.0485)
+Saturn  = Planet("Saturn","https://upload.wikimedia.org/wikipedia/commons/1/1e/Solarsystemscope_texture_8k_saturn.jpg", [9.58*AU,0,-0.025*AU], [0,9.7*KM,0], [0,0,0], mass=5.683e26, radius=0.01674, semi_major_axis=9.582,  eccentricity=0.0555)
+Uranus  = Planet("Uranus","https://upload.wikimedia.org/wikipedia/commons/9/95/Solarsystemscope_texture_2k_uranus.jpg", [19.22*AU,0,0.015*AU], [0,6.8*KM,0], [0,0,0], mass=8.681e25, radius=0.00729, semi_major_axis=19.201,  eccentricity=0.0463)
+Neptune = Planet("Neptune","https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5m6I1cNvdxJo1hMYBzgmMzcD1viyiItRiyg&s", [30.05*AU,0,-0.02*AU], [0,5.4*KM,0], [0,0,0], mass=1.024e26, radius=0.00708, semi_major_axis=30.047,  eccentricity=0.0090)
+Pluto   = Planet("Pluto","https://planetpixelemporium.com/download/download.php?plutomap2k.jpg", [39.48*AU,0,0.01*AU], [0,4.7*KM,0], [0,0,0], mass=1.309e22, radius=0.00034, semi_major_axis=39.482,  eccentricity=0.2488)
 
 planets = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto]
 bodies = [Sun] + planets
@@ -277,71 +280,81 @@ def compute_acceleration(p, bodies, G):
         
     return total_acc
 
-if __name__ == "__main__":
-    active_explosions = []
-    scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
-    t = 0
-    dt = 3600 # 1 hour per frame (Good speed to watch meteors)
+for data in planets:
+    a_meters = data.semi_major_axis * AU  # Đổi ra mét
+    e = data.eccentricity
+    
+    # Tính Vị trí (Cận điểm) và Vận tốc chính xác
+    r_peri = a_meters * (1 - e)
+    v_peri = math.sqrt((G * Sun.mass / a_meters) * ((1 + e) / (1 - e)))
+    
+    data.position = vector(r_peri, 0, 0)
+    data.velocity = vector(0, v_peri, 0)
+    data.visual.clear_trail()
 
-    while True:
-        rate(50)
+
+t = 0
+dt = 3600 # 1 hour per frame (Good speed to watch meteors)
+
+while True:
+    rate(50)
+    
+    if pending_bodies:
+        bodies.extend(pending_bodies)
+        pending_bodies.clear()
         
-        if pending_bodies:
-            bodies.extend(pending_bodies)
-            pending_bodies.clear()
+    # Animate Explosions
+    for exp in active_explosions[:]:
+        exp.radius += 0.015       # Make the fireball grow
+        exp.opacity -= 0.015      # Make it fade out gradually
+        if exp.opacity <= 0:
+            exp.visible = False   # Hide it completely
+            active_explosions.remove(exp) # Clean up memory
             
-        # Animate Explosions
-        for exp in active_explosions[:]:
-            exp.radius += 0.015       # Make the fireball grow
-            exp.opacity -= 0.015      # Make it fade out gradually
-            if exp.opacity <= 0:
-                exp.visible = False   # Hide it completely
-                active_explosions.remove(exp) # Clean up memory
-                
-        # Handle Collisions
-        meteors_to_destroy = []
-        for body in bodies:
-            if body.body_type() == "Meteor":
-                for target in bodies:
-                    if target.body_type() in ["Planet", "Star", "Black Hole"]:
-                        # Check distance between meteor and planet
-                        distance = mag(body.position - target.position)
+    # Handle Collisions
+    meteors_to_destroy = []
+    for body in bodies:
+        if body.body_type() == "Meteor":
+            for target in bodies:
+                if target.body_type() in ["Planet", "Star", "Black Hole"]:
+                    # Check distance between meteor and planet
+                    distance = mag(body.position - target.position)
+                    
+                    # If it gets within 0.05 AU
+                    if distance < 0.05 * AU:
+                        trigger_explosion(body.position) 
+                        meteors_to_destroy.append(body)
+                        break
                         
-                        # If it gets within 0.05 AU
-                        if distance < 0.05 * AU:
-                            trigger_explosion(body.position) 
-                            meteors_to_destroy.append(body)
-                            break
-                            
-        for m in meteors_to_destroy:
-            if m in bodies:
-                m.visual.visible = False
-                m.visual.clear_trail() # Erase the red line left behind
-                bodies.remove(m)
-        for b in bodies[:]: 
-            if b.body_type() == "Meteor":
-                if mag(b.position) > 20 * AU:
-                    b.visual.visible = False
-                    b.visual.make_trail = False 
-                    b.visual.clear_trail()      
-                    bodies.remove(b)
-                
-        # Physics Calculations
-        for p in bodies:
-            p.acceleration = compute_acceleration(p, bodies, G)
+    for m in meteors_to_destroy:
+        if m in bodies:
+            m.visual.visible = False
+            m.visual.clear_trail() # Erase the red line left behind
+            bodies.remove(m)
+    for b in bodies[:]: 
+        if b.body_type() == "Meteor":
+            if mag(b.position) > 20 * AU:
+                b.visual.visible = False
+                b.visual.make_trail = False 
+                b.visual.clear_trail()      
+                bodies.remove(b)
+            
+    # Physics Calculations
+    for p in bodies:
+        p.acceleration = compute_acceleration(p, bodies, G)
 
-        for p in bodies:
-            p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
+    for p in bodies:
+        p.position += p.velocity * dt + 0.5 * p.acceleration * dt**2
 
-        new_acc_list = []
-        for p in bodies:
-            new_acc_list.append(compute_acceleration(p, bodies, G))
+    new_acc_list = []
+    for p in bodies:
+        new_acc_list.append(compute_acceleration(p, bodies, G))
 
-        for i, p in enumerate(bodies):
-            p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
-            p.acceleration = new_acc_list[i]
+    for i, p in enumerate(bodies):
+        p.velocity += 0.5 * (p.acceleration + new_acc_list[i]) * dt
+        p.acceleration = new_acc_list[i]
 
-        for p in bodies:
-            p.update_visual()
+    for p in bodies:
+        p.update_visual()
 
-        t += dt
+    t += dt
