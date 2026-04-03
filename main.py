@@ -3,6 +3,12 @@ from abc import ABC, abstractmethod
 import random
 import math
 
+
+AU = 1.496e11      # meters
+KM = 1000          # meters
+G = 6.67e-11       # gravitational constant
+SCALE = 1/AU       
+C = 3e8            # m/s    
 # ============================================= BACKGROUND ==========================================================
 scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
@@ -21,12 +27,36 @@ for _ in range(NUM_STARS):
         emissive=True  # self-glowed 
     )
 
+# =============================================== ASTEROID BELT ========================================================
+NUM_ASTEROIDS = 500
+
+asteroids = []
+
+inner_radius = 2.2 * AU   # gần Mars
+outer_radius = 3.2 * AU   # trước Jupiter
+
+for _ in range(NUM_ASTEROIDS):
+    # random bán kính trong vành đai
+    r = random.uniform(inner_radius, outer_radius)
+    
+    # random góc
+    theta = random.uniform(0, 2 * math.pi)
+    
+    # tạo vị trí (hơi lệch z cho đẹp)
+    x = r * math.cos(theta)
+    y = r * math.sin(theta)
+    z = random.uniform(-0.05*AU, 0.05*AU)
+    
+    asteroid = sphere(
+        pos=vector(x, y, z) * SCALE,
+        radius=random.uniform(0.002, 0.008),
+        color=color.gray(0.7),
+        emissive=False
+    )
+    
+    asteroids.append(asteroid)
+
 # ============================================== SOLAR SYSTEM ==========================================================
-AU = 1.496e11      # meters
-KM = 1000          # meters
-G = 6.67e-11       # gravitational constant
-SCALE = 1/AU       
-C = 3e8            # m/s    
 
 class Body(ABC):
     def __init__(self, name, texture, position=[0,0,0], velocity=[0,0,0], acceleration=[0,0,0], mass=1, radius=0.05):
