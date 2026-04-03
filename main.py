@@ -4,10 +4,10 @@ import random
 import math
 
 # ============================================= BACKGROUND ==========================================================
+scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 
 
-
-NUM_STARS = 200
+NUM_STARS = 1000
 
 for _ in range(NUM_STARS):
     x = random.uniform(-100, 100)
@@ -355,7 +355,6 @@ for data in planets:
     data.visual.clear_trail()
 
 
-scene = canvas(title="Solar System Simulation", width=1280, height=720, center=vector(0,0,0), background=color.black)
 t = 0
 dt = 3600 # 1 hour per frame (Good speed to watch meteors)
 
@@ -381,11 +380,11 @@ while True:
             for target in bodies:
                 if target.body_type() in ["Planet", "Star", "Black Hole"]:
                     # Check distance between meteor and planet
-                    distance = mag(body.position - target.position)
+                    distance = mag(body._position - target._position)
                     
                     # If it gets within 0.05 AU
                     if distance < 0.05 * AU:
-                        trigger_explosion(body.position) 
+                        trigger_explosion(body._position) 
                         meteors_to_destroy.append(body)
                         break
                         
@@ -396,7 +395,7 @@ while True:
             bodies.remove(m)
     for b in bodies[:]: 
         if b.body_type() == "Meteor":
-            if mag(b.position) > 20 * AU:
+            if mag(b._position) > 20 * AU:
                 b.visual.visible = False
                 b.visual.make_trail = False 
                 b.visual.clear_trail()      
