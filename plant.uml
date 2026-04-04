@@ -1,62 +1,118 @@
 @startuml
+title main.py - Solar System Simulation Class Diagram
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty members
 
-title Solar System Simulation - Objects and Physical Rules
-
-class Simulation {
-- bodies : List<Body>
-- dt : float
-+ add_body(body)
-+ step()
-+ run()
+package "External Types" {
+    class vector
+    class sphere
+    class canvas
+    class label
+    abstract class ABC
 }
 
-class Body {
-- name : str
-- mass : float
-- position : Vector2D
-- velocity : Vector2D
-- radius : float
-+ update(dt)
+class MainModule <<module>> {
+    + AU: float = 1.496e11
+    + KM: int = 1000
+    + G: float = 6.67e-11
+    + SCALE: float = 1 / AU
+    + C: float = 3e8
+    --
+    + to_vector(value: vector | Sequence[float], name: str): vector
 }
 
-class Planet {
+abstract class Body {
+    + name: str
+    + mass: float
+    + radius: float
+    + texture: str | None
+    + visual: sphere
+    - _position: vector
+    - _velocity: vector
+    - _acceleration: vector
+    --
+    + __init__(name: str, texture: str | None, position: vector | Sequence[float], velocity: vector | Sequence[float], acceleration: vector | Sequence[float], mass: float, radius: float)
+    + position: vector
+    + velocity: vector
+    + acceleration: vector
+    + update_visual(): None
+    + {abstract} body_type(): str
+}
+
+class Star {
+    + body_type(): str
 }
 
 class Meteor {
-- target_planet : Planet
-+ set_target(planet)
+    + body_type(): str
 }
 
-class PhysicsEngine {
-+ compute_gravity(b1, b2)
-+ apply_motion(body, force, dt)
+class Planet {
+    + semi_major_axis: float
+    + eccentricity: float
+    --
+    + __init__(name: str, texture: str, position: vector | Sequence[float], velocity: vector | Sequence[float], acceleration: vector | Sequence[float], mass: float, radius: float, semi_major_axis: float, eccentricity: float)
+    + body_type(): str
 }
 
-class Integrator {
-+ euler_step(body, force, dt)
+class BlackHole {
+    + __init__(name: str, position: vector | Sequence[float], mass: float)
+    + body_type(): str
 }
 
-class CollisionDetector {
-+ check_collision(b1, b2)
+class SolarSystemSimulation {
+    + scene: canvas
+    + sun: Star
+    + planets: list[Planet]
+    + bodies: list[Body]
+    + planet_facts: dict[str, str]
+    + info_board: label
+    + active_explosions: list[Any]
+    + pending_bodies: list[Body]
+    + selected_target: Body | None
+    + black_hole: BlackHole | None
+    + is_black_hole: bool
+    - _initial_states: dict[str, tuple[vector, vector]]
+    --
+    + __init__(): None
+    + run(dt: float = 3600.0): None
+    + on_mouse_click(evt: Any): None
+    + on_key_input(evt: Any): None
+    + toggle_black_hole(): None
+    + spawn_meteor(target: Body): None
+    + reset_simulation(): None
+    - _build_starfield(count: int): None
+    - _build_asteroid_belt(count: int): None
+    - _create_main_bodies(): tuple[Star, list[Planet]]
+    - _initialize_elliptic_orbits(): None
+    - _step(dt: float): None
+    - _animate_explosions(): None
+    - _handle_collisions(): None
+    - _cleanup_far_meteors(): None
+    - _integrate_bodies(dt: float): None
+    - _compute_acceleration(body: Body): vector
+    - _trigger_explosion(hit_position: vector): None
 }
 
-class Vector2D {
-- x : float
-- y : float
-}
-
-Body <|-- Planet
+ABC <|-- Body
+Body <|-- Star
 Body <|-- Meteor
+Body <|-- Planet
+Body <|-- BlackHole
 
-Simulation "1" o-- "*" Body
-Simulation --> PhysicsEngine
-Simulation --> Integrator
-Simulation --> CollisionDetector
+MainModule ..> Body : creates
+MainModule ..> SolarSystemSimulation : runs
+MainModule ..> vector : converts with to_vector()
 
-PhysicsEngine --> Body
-Integrator --> Body
-CollisionDetector --> Body
+Body ..> vector : uses
+Body ..> sphere : renders
 
-Body --> Vector2D
+SolarSystemSimulation *-- Star : sun
+SolarSystemSimulation *-- "0..*" Planet : planets
+SolarSystemSimulation o-- "1..*" Body : bodies
+SolarSystemSimulation o-- "0..1" BlackHole : black_hole
+SolarSystemSimulation ..> Meteor : spawns
+SolarSystemSimulation ..> vector : physics
 
 @enduml
