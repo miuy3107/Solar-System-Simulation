@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import math
 import random
 from typing import Any, Sequence
 
-from vpython import canvas, color, label, local_light, mag, rate, sphere, vector
+from vpython import canvas, color, dot, label, local_light, mag, rate, sphere, vector
 
 
 AU = 1.496e11
@@ -16,18 +14,7 @@ C = 3e8
 
 
 def to_vector(value: vector | Sequence[float], name: str) -> vector:
-    """Convert supported vector inputs into a VPython vector.
-
-    Args:
-        value: Existing VPython vector or a 3-item numeric sequence.
-        name: Parameter name for better error context.
-
-    Returns:
-        A VPython vector.
-
-    Raises:
-        TypeError: If the input type or shape is invalid.
-    """
+    """Convert supported vector inputs into a VPython vector."""
     if isinstance(value, vector):
         return value
     if not isinstance(value, Sequence) or len(value) != 3:
@@ -48,17 +35,6 @@ class Body(ABC):
         mass: float = 1.0,
         radius: float = 0.05,
     ) -> None:
-        """Initialize body physics and visual representation.
-
-        Args:
-            name: Display name.
-            texture: URL or texture name used by VPython.
-            position: Position in meters.
-            velocity: Velocity in meters/second.
-            acceleration: Acceleration in meters/second^2.
-            mass: Mass in kilograms.
-            radius: Visual radius in scene units.
-        """
         self.name = name
         self.mass = float(mass)
         self.radius = float(radius)
@@ -77,36 +53,29 @@ class Body(ABC):
 
     @property
     def position(self) -> vector:
-        """Return current position in meters."""
         return self._position
 
     @position.setter
     def position(self, value: vector | Sequence[float]) -> None:
-        """Set position in meters."""
         self._position = to_vector(value, "position")
 
     @property
     def velocity(self) -> vector:
-        """Return current velocity in meters/second."""
         return self._velocity
 
     @velocity.setter
     def velocity(self, value: vector | Sequence[float]) -> None:
-        """Set velocity in meters/second."""
         self._velocity = to_vector(value, "velocity")
 
     @property
     def acceleration(self) -> vector:
-        """Return current acceleration in meters/second^2."""
         return self._acceleration
 
     @acceleration.setter
     def acceleration(self, value: vector | Sequence[float]) -> None:
-        """Set acceleration in meters/second^2."""
         self._acceleration = to_vector(value, "acceleration")
 
     def update_visual(self) -> None:
-        """Sync the render object with the physical position."""
         self.visual.pos = self._position * SCALE
 
     @abstractmethod
@@ -115,24 +84,16 @@ class Body(ABC):
 
 
 class Star(Body):
-    """Standard luminous star body."""
-
     def body_type(self) -> str:
-        """Return body type name."""
         return "Star"
 
 
 class Meteor(Body):
-    """Fast transient body used for impact events."""
-
     def body_type(self) -> str:
-        """Return body type name."""
         return "Meteor"
 
 
 class Planet(Body):
-    """Planet with orbital metadata for reset and initialization."""
-
     def __init__(
         self,
         name: str,
@@ -145,19 +106,6 @@ class Planet(Body):
         semi_major_axis: float,
         eccentricity: float,
     ) -> None:
-        """Initialize a planet.
-
-        Args:
-            name: Planet name.
-            texture: URL or texture identifier.
-            position: Initial position in meters.
-            velocity: Initial velocity in meters/second.
-            acceleration: Initial acceleration.
-            mass: Mass in kilograms.
-            radius: Base visual radius.
-            semi_major_axis: Orbital semi-major axis in AU.
-            eccentricity: Orbital eccentricity.
-        """
         super().__init__(
             name=name,
             texture=texture,
@@ -171,21 +119,11 @@ class Planet(Body):
         self.eccentricity = float(eccentricity)
 
     def body_type(self) -> str:
-        """Return body type name."""
         return "Planet"
 
 
 class BlackHole(Body):
-    """Black hole body with Schwarzschild-radius-based visual size."""
-
     def __init__(self, name: str, position: vector | Sequence[float], mass: float) -> None:
-        """Initialize black hole.
-
-        Args:
-            name: Black hole label.
-            position: Position in meters.
-            mass: Mass in kilograms.
-        """
         radius_scene_units = (2 * G * float(mass) / (C**2)) * SCALE
         super().__init__(
             name=name,
@@ -200,15 +138,11 @@ class BlackHole(Body):
         self.visual.emissive = False
 
     def body_type(self) -> str:
-        """Return body type name."""
         return "BlackHole"
 
 
 class SolarSystemSimulation:
-    """Encapsulated VPython simulation for planets, meteors, and black hole mode."""
-
     def __init__(self) -> None:
-        """Build scene state and register interaction handlers."""
         self.scene = canvas(
             title="Solar System Simulation",
             width=1280,
@@ -266,21 +200,11 @@ class SolarSystemSimulation:
         self.scene.bind("keydown", self.on_key_input)
 
     def run(self, dt: float = 3600.0) -> None:
-        """Run the simulation loop.
-
-        Args:
-            dt: Time step in seconds.
-        """
         while True:
             rate(50)
             self._step(dt)
 
     def on_mouse_click(self, evt: Any) -> None:
-        """Handle body selection and info panel toggle.
-
-        Args:
-            evt: VPython mouse event.
-        """
         click_pos = evt.pos
         closest: Body | None = None
         min_diff = float("inf")
@@ -294,14 +218,14 @@ class SolarSystemSimulation:
         if closest is not None and min_diff < 0.3:
             self.selected_target = closest
             if closest.name in self.planet_facts:
-                new_text = (
-                    f"{closest.name}\\n"
-                    f"Type: {closest.body_type()}\\n"
+               new_text = (
+                    f"{closest.name}\n"
+                    f"Type: {closest.body_type()}\n"
                     f"{self.planet_facts[closest.name]}"
                 )
-                if self.info_board.visible and self.info_board.text == new_text:
+            if self.info_board.visible and self.info_board.text == new_text:
                     self.info_board.visible = False
-                else:
+            else:
                     self.info_board.text = new_text
                     self.info_board.visible = True
             return
@@ -310,11 +234,6 @@ class SolarSystemSimulation:
         self.info_board.visible = False
 
     def on_key_input(self, evt: Any) -> None:
-        """Handle keyboard controls.
-
-        Args:
-            evt: VPython keyboard event.
-        """
         key = str(evt.key).lower()
         if key == "b":
             self.toggle_black_hole()
@@ -324,7 +243,6 @@ class SolarSystemSimulation:
             self.reset_simulation()
 
     def toggle_black_hole(self) -> None:
-        """Switch between Sun and black hole at the system center."""
         if not self.is_black_hole:
             self.sun.visual.visible = False
             self.black_hole = BlackHole("BlackHole", self.sun.position, self.sun.mass * 10)
@@ -341,12 +259,39 @@ class SolarSystemSimulation:
         self.black_hole = None
         self.is_black_hole = False
 
-    def spawn_meteor(self, target: Body) -> None:
-        """Spawn a meteor aimed at the selected body.
+    def _calculate_interception(self, target: Body, spawn_pos: vector, meteor_speed: float) -> vector:
+        from math import sqrt
+        
+        p_t = target.position
+        v_t = target.velocity
+        p_m = spawn_pos
+        s_m = meteor_speed
+        
+        dp = p_t - p_m
+        
+        A = mag(v_t)**2 - s_m**2
+        B = 2 * dot(dp, v_t)
+        C = mag(dp)**2
+        
+        delta = B**2 - 4*A*C
+        if delta < 0:
+            return p_t
+            
+        t1 = (-B - sqrt(delta)) / (2*A)
+        t2 = (-B + sqrt(delta)) / (2*A)
+        
+        if t1 > 0 and t2 > 0:
+            t = min(t1, t2)
+        elif t1 > 0:
+            t = t1
+        elif t2 > 0:
+            t = t2
+        else:
+            return p_t
+            
+        return p_t + v_t * t
 
-        Args:
-            target: Destination body.
-        """
+    def spawn_meteor(self, target: Body) -> None:
         spawn_radius = max(3 * AU, mag(target.position) + 2 * AU)
         raw_dir = vector(
             random.uniform(-1, 1),
@@ -357,13 +302,19 @@ class SolarSystemSimulation:
             raw_dir = vector(1, 0, 0)
 
         spawn_pos = raw_dir.norm() * spawn_radius
-        direction = (target.position - spawn_pos).norm()
+        meteor_speed = 1000 * KM
+        
+        # TÍNH TOÁN ĐIỂM RƠI TƯƠNG LAI
+        future_pos = self._calculate_interception(target, spawn_pos, meteor_speed)
+        
+        # Hướng bắn thẳng tới tọa độ tương lai
+        direction = (future_pos - spawn_pos).norm()
 
         meteor = Meteor(
             name=f"Meteor_{random.randint(100, 999)}",
             texture=None,
             position=spawn_pos,
-            velocity=direction * (1000 * KM),
+            velocity=direction * meteor_speed,
             acceleration=(0.0, 0.0, 0.0),
             mass=1e12,
             radius=0.01,
@@ -374,10 +325,9 @@ class SolarSystemSimulation:
         meteor.visual.retain = 2_000
 
         self.pending_bodies.append(meteor)
-        print(f"Meteor is coming to hit {target.name}!")
+        print(f"Meteor calculated intercept trajectory for {target.name}!")
 
     def reset_simulation(self) -> None:
-        """Reset all dynamic state and restore default celestial setup."""
         for body in self.bodies:
             body.visual.visible = False
 
@@ -407,11 +357,6 @@ class SolarSystemSimulation:
         print("Simulation reset!")
 
     def _build_starfield(self, count: int) -> None:
-        """Create decorative stars in the background.
-
-        Args:
-            count: Number of stars to render.
-        """
         for _ in range(count):
             sphere(
                 pos=vector(
@@ -425,11 +370,6 @@ class SolarSystemSimulation:
             )
 
     def _build_asteroid_belt(self, count: int) -> None:
-        """Create visual asteroid belt between Mars and Jupiter.
-
-        Args:
-            count: Number of asteroids.
-        """
         inner_radius = 2.2 * AU
         outer_radius = 3.2 * AU
 
@@ -447,11 +387,6 @@ class SolarSystemSimulation:
             )
 
     def _create_main_bodies(self) -> tuple[Star, list[Planet]]:
-        """Create the sun and all planets.
-
-        Returns:
-            Tuple with sun and list of planets.
-        """
         sun = Star(
             "Sun",
             "https://upload.wikimedia.org/wikipedia/commons/c/cb/Solarsystemscope_texture_2k_sun.jpg",
@@ -566,7 +501,6 @@ class SolarSystemSimulation:
         return sun, planets
 
     def _initialize_elliptic_orbits(self) -> None:
-        """Set each planet to perihelion velocity based on Keplerian approximation."""
         for planet in self.planets:
             a_meters = planet.semi_major_axis * AU
             e = planet.eccentricity
@@ -577,22 +511,15 @@ class SolarSystemSimulation:
             planet.visual.clear_trail()
 
     def _step(self, dt: float) -> None:
-        """Advance simulation by one time-step.
-
-        Args:
-            dt: Time step in seconds.
-        """
         if self.pending_bodies:
             self.bodies.extend(self.pending_bodies)
             self.pending_bodies.clear()
-
         self._animate_explosions()
-        self._handle_collisions()
+        self._handle_collisions(dt)  
         self._cleanup_far_meteors()
         self._integrate_bodies(dt)
 
     def _animate_explosions(self) -> None:
-        """Expand and fade active explosion visuals."""
         for explosion in self.active_explosions[:]:
             explosion.radius += 0.015
             explosion.opacity -= 0.015
@@ -600,8 +527,7 @@ class SolarSystemSimulation:
                 explosion.visible = False
                 self.active_explosions.remove(explosion)
 
-    def _handle_collisions(self) -> None:
-        """Detect meteor impacts and trigger explosion effects."""
+    def _handle_collisions(self, dt: float) -> None:
         meteors_to_destroy: list[Meteor] = []
         target_types = {"Planet", "Star", "BlackHole"}
 
@@ -614,8 +540,12 @@ class SolarSystemSimulation:
                 if target is meteor or target.body_type() not in target_types:
                     continue
                 distance = mag(meteor.position - target.position)
-                if distance < 0.05 * AU:
-                    self._trigger_explosion(meteor.position)
+                            
+                target_physical_radius = target.radius / SCALE
+                meteor_physical_radius = meteor.radius / SCALE                            
+                dynamic_hitbox = target_physical_radius + meteor_physical_radius + (mag(meteor.velocity) * dt)               
+                if distance < dynamic_hitbox:
+                    self._trigger_explosion(target.position)
                     meteors_to_destroy.append(meteor)
                     break
 
@@ -626,7 +556,6 @@ class SolarSystemSimulation:
                 self.bodies.remove(meteor)
 
     def _cleanup_far_meteors(self) -> None:
-        """Remove meteors that leave the simulation region."""
         for body in self.bodies[:]:
             if body.body_type() == "Meteor" and mag(body.position) > 20 * AU:
                 body.visual.visible = False
@@ -635,7 +564,6 @@ class SolarSystemSimulation:
                 self.bodies.remove(body)
 
     def _integrate_bodies(self, dt: float) -> None:
-        """Update acceleration, position, and velocity using velocity Verlet."""
         for body in self.bodies:
             body.acceleration = self._compute_acceleration(body)
 
@@ -649,14 +577,10 @@ class SolarSystemSimulation:
             body.update_visual()
 
     def _compute_acceleration(self, body: Body) -> vector:
-        """Compute net gravitational acceleration for one body.
-
-        Args:
-            body: Body to evaluate.
-
-        Returns:
-            Net acceleration vector.
-        """
+        # [CẬP NHẬT MỚI]: Bỏ qua trọng lực đối với thiên thạch để nó bay thẳng theo đường toán học
+        if body.body_type() == "Meteor":
+            return vector(0, 0, 0)
+            
         total_acc = vector(0, 0, 0)
         for other in self.bodies:
             if body is other:
@@ -669,11 +593,6 @@ class SolarSystemSimulation:
         return total_acc
 
     def _trigger_explosion(self, hit_position: vector) -> None:
-        """Create temporary explosion visual at collision coordinates.
-
-        Args:
-            hit_position: Position in meters.
-        """
         explosion = sphere(
             pos=hit_position * SCALE,
             radius=0.1,
