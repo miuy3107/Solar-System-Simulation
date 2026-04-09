@@ -304,10 +304,8 @@ class SolarSystemSimulation:
         spawn_pos = raw_dir.norm() * spawn_radius
         meteor_speed = 1000 * KM
         
-        # TÍNH TOÁN ĐIỂM RƠI TƯƠNG LAI
         future_pos = self._calculate_interception(target, spawn_pos, meteor_speed)
         
-        # Hướng bắn thẳng tới tọa độ tương lai
         direction = (future_pos - spawn_pos).norm()
 
         meteor = Meteor(
